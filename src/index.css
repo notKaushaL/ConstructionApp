@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Plus Jakarta Sans', sans-serif;
+
+  --color-brand-gold: #FED447;
+  --color-brand-gold-dark: #D4A800;
+  --color-brand-dark: #2B1D1C;
+  --color-brand-sub: #A0A0A0;
+  --color-surface: #FFFFFF;
+  --color-surface-warm: #FFF8F0;
+  --color-surface-muted: #F5F5F5;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  font-family: 'Inter', sans-serif;
+  background-color: #E8E8E8;
+  color: #2B1D1C;
+  transition: background-color 0.3s ease;
+}
+
+/* ── App shell ─────────────────────────────────────────────────────────── */
+#root {
+  width: 100%;
+  max-width: 430px;
+  height: 100dvh;
+  margin: 0 auto;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 80px rgba(0,0,0,0.15);
+  transition: background-color 0.3s ease;
+}
+
+/* Scrollbar hidden */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+/* ── Screen layout ─────────────────────────────────────────────────────── */
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+}
+
+.screen-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* ── Utilities ─────────────────────────────────────────────────────────── */
+.pb-safe { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+
+.card-shadow {
+  box-shadow: 0 4px 24px rgba(43, 29, 28, 0.06), 0 1px 4px rgba(43, 29, 28, 0.04);
+}
+.card-stripe { border-left: 4px solid #FED447; }
+
+.nav-blur {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.transition-smooth { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ── Glassmorphism card ────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ── Hover / press effects ─────────────────────────────────────────────── */
+.btn-press {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) {
+  .btn-press:hover {
+    box-shadow: 0 6px 28px rgba(43, 29, 28, 0.12);
+    transform: translateY(-1px);
+  }
+}
+
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+@media (hover: hover) {
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(43, 29, 28, 0.1), 0 2px 8px rgba(43, 29, 28, 0.06);
+  }
+}
+
+/* ── Back header glassmorphism bar ─────────────────────────────────────── */
+.header-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+/* ── Grand total card — always dark ────────────────────────────────────── */
+.grand-total-card {
+  background-color: #2B1D1C !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* DARK MODE                                                                   */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] body { background-color: #0d1117; }
+[data-theme="dark"] #root { background-color: #111827; }
+[data-theme="dark"] .screen { background-color: #111827 !important; }
+
+/* ── Dark: white backgrounds → dark card ── */
+[data-theme="dark"] .bg-white  { background-color: #1F2937 !important; }
+[data-theme="dark"] .bg-\[\#FAFAFA\] { background-color: #1a2233 !important; }
+[data-theme="dark"] .bg-\[\#F5F5F5\] { background-color: #374151 !important; }
+[data-theme="dark"] .bg-\[\#F0F0F0\] { background-color: #374151 !important; }
+[data-theme="dark"] .bg-\[\#F8F8F8\] { background-color: #374151 !important; }
+
+/* ── Dark: warm/tinted surfaces ── */
+[data-theme="dark"] .bg-\[\#FFF8DC\] { background-color: #1c1a08 !important; }
+[data-theme="dark"] .bg-\[\#FFF8F0\] { background-color: #1c1a08 !important; }
+[data-theme="dark"] .bg-\[\#E8F5E9\] { background-color: #0d2318 !important; }
+[data-theme="dark"] .bg-blue-50      { background-color: #0d1b2e !important; }
+[data-theme="dark"] .bg-orange-50    { background-color: #1e1208 !important; }
+[data-theme="dark"] .bg-green-50     { background-color: #0d2318 !important; }
+[data-theme="dark"] .bg-red-50       { background-color: #2d0f0f !important; }
+
+/* ── Dark: primary text ── */
+[data-theme="dark"] .text-\[\#2B1D1C\] { color: #F3F4F6 !important; }
+[data-theme="dark"] .font-display.text-\[\#2B1D1C\] { color: #F9FAFB !important; }
+
+/* ── Dark: subtext + gold ── */
+[data-theme="dark"] .text-\[\#A0A0A0\] { color: #9CA3AF !important; }
+[data-theme="dark"] .text-\[\#D4A800\] { color: #FED447 !important; }
+[data-theme="dark"] .text-\[\#D4C080\] { color: #9CA3AF !important; }
+[data-theme="dark"] .text-\[\#666\]    { color: #9CA3AF !important; }
+
+/* ── Dark: borders & dividers ── */
+[data-theme="dark"] .border-gray-50,
+[data-theme="dark"] .border-gray-100,
+[data-theme="dark"] .border-t,
+[data-theme="dark"] .border-b { border-color: #374151 !important; }
+[data-theme="dark"] .divide-gray-50 > * + * { border-color: #374151 !important; }
+
+/* ── Dark: inputs ── */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: #374151 !important;
+  color: #F3F4F6 !important;
+  color-scheme: dark;
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder { color: #6B7280 !important; }
+
+/* ── Dark: card shadows deeper ── */
+[data-theme="dark"] .card-shadow {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3) !important;
+}
+
+/* ── Dark: nav ── */
+[data-theme="dark"] .nav-blur {
+  background: rgba(17, 24, 39, 0.95) !important;
+}
+
+/* ── Dark: header glass ── */
+[data-theme="dark"] .header-glass {
+  background: rgba(17, 24, 39, 0.85) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+[data-theme="dark"] .bg-white\/80 { background: rgba(17, 24, 39, 0.85) !important; }
+
+/* ── Dark: glassmorphism card ── */
+[data-theme="dark"] .glass-card {
+  background: rgba(31, 41, 55, 0.7) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── Dark: active nav pill ── */
+[data-theme="dark"] .bg-\[\#2B1D1C\] { background-color: #F9FAFB !important; }
+
+/* ── Dark: Grand Total card stays dark ── */
+[data-theme="dark"] .grand-total-card { background-color: #0d1117 !important; }
+
+/* ── Dark: "Choose Site & Share" button — force text to stay white ── */
+[data-theme="dark"] .share-btn { background-color: #FED447 !important; color: #2B1D1C !important; }
+[data-theme="dark"] .share-btn svg { stroke: #2B1D1C !important; }
+
+/* ── Dark: text-white on dark bg (entries count) should stay visible ── */
+[data-theme="dark"] .text-white\/50 { color: rgba(255,255,255,0.5) !important; }
+[data-theme="dark"] .text-\[\#FED447\]\/70 { color: rgba(254,212,71,0.7) !important; }
+
+/* ── Body bg transitions ── */
+body, #root, .screen { transition: background-color 0.25s ease; }
