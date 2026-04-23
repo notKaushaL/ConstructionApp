@@ -9,7 +9,7 @@ import SiteSummaryScreen from './screens/SiteSummaryScreen'
 import BottomNav from './components/BottomNav'
 import useStore from './store/useStore'
 import { TRANSLATIONS } from './i18n/translations'
-import { LogOut, Power } from 'lucide-react'
+import { Power } from 'lucide-react'
 
 // ── Language context ──────────────────────────────────────────────────────────
 export const LangContext = createContext(TRANSLATIONS.en)
@@ -32,28 +32,23 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
-  // ── Navigation History Management ───────────────────────────────────────────
+  // Navigation History Management
   useEffect(() => {
     const handlePopState = (e) => {
-      if (isShutdown) return // Do nothing if shutdown
+      if (isShutdown) return
 
       const state = e.state
       
-      // If we hit the sentinel or bottom of history
       if (!state || state.type === 'ASHVIN_SENTINEL') {
         if (screenRef.current === 'home') {
-          // Trigger the exit alert
           setShowExitAlert(true)
-          // Re-push home to keep the user from actually leaving the app history
           window.history.pushState({ screen: 'home', params: {} }, '')
         } else {
-          // If on another screen, go to home
           setScreen('home')
           setParams({})
           window.history.pushState({ screen: 'home', params: {} }, '')
         }
       } else if (state.screen) {
-        // Normal app navigation
         setScreen(state.screen)
         setParams(state.params || {})
         setShowExitAlert(false)
@@ -61,15 +56,17 @@ export default function App() {
     }
 
     // Setup: Sentinel -> Home
-    // We only do this once. replaceState is important here.
-    window.history.replaceState({ type: 'ASHVIN_SENTINEL' }, '')
-    window.history.pushState({ screen: 'home', params: {} }, '')
+    if (!window.history.state || window.history.state.type !== 'ASHVIN_SENTINEL') {
+      window.history.replaceState({ type: 'ASHVIN_SENTINEL' }, '')
+      window.history.pushState({ screen: 'home', params: {} }, '')
+    }
 
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, []) // Empty deps ensures this only runs once on app mount
+  }, [isShutdown])
 
   const navigate = (to, newParams = {}, replace = false) => {
+    if (isShutdown) return
     if (screen === to && JSON.stringify(params) === JSON.stringify(newParams)) return
 
     setScreen(to)
@@ -83,19 +80,39 @@ export default function App() {
     }
   }
 
-  const showNav = NAV_SCREENS.includes(screen)
-  const t = TRANSLATIONS[language] || TRANSLATIONS.en
+  const handleExitApp = () => {
+    setShowExitAlert(false);
+    
+    // 1. Try to close the window using various tricks
+    try {
+      window.close();
+      if (!window.closed) {
+        const win = window.open("", "_self");
+        win.close();
+      }
+    } catch (e) {
+      console.log('Close attempt failed');
+    }
 
+    // 2. Regardless of whether close worked, show the shutdown screen
+    // This covers the case where the browser blocks the close.
+    setIsShutdown(true);
+  }
+
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en
+  const showNav = NAV_SCREENS.includes(screen) && !isShutdown
+
+  // ── RENDER SHUTDOWN SCREEN ──────────────────────────────────────────────────
   if (isShutdown) {
     return (
-      <div className="fixed inset-0 bg-[#2B1D1C] flex flex-col items-center justify-center p-8 z-[10000]">
+      <div className="fixed inset-0 bg-[#2B1D1C] flex flex-col items-center justify-center p-8 z-[10001]">
         <div className="w-24 h-24 bg-[#FED447]/10 rounded-[40px] flex items-center justify-center mb-8 animate-pulse">
           <Power size={48} className="text-[#FED447]" />
         </div>
-        <h2 className="text-[28px] font-bold text-white mb-4 font-display">App Exited</h2>
+        <h2 className="text-[28px] font-bold text-white mb-4 font-display">App Closed</h2>
         <p className="text-[16px] text-[#A0A0A0] text-center leading-relaxed">
-          The session has been safely closed.<br />
-          You can now swipe the app away.
+          The session has been ended.<br />
+          You can now safely swipe this app away.
         </p>
         <div className="mt-12 flex flex-col items-center gap-2">
           <div className="w-1 h-8 bg-white/10 rounded-full animate-bounce"></div>
@@ -141,11 +158,7 @@ export default function App() {
               </p>
               <div className="flex flex-col gap-3">
                 <button
-                  onClick={() => {
-                    // Try to close, then shutdown
-                    try { window.close(); } catch (e) {}
-                    setIsShutdown(true);
-                  }}
+                  onClick={handleExitApp}
                   className="w-full h-[56px] bg-[#2B1D1C] dark:bg-[#FED447] text-white dark:text-[#2B1D1C] font-bold text-[16px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-black/20"
                 >
                   Exit App
