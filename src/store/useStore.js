@@ -31,15 +31,15 @@ const useStore = create(
       setLanguage: (l) => set({ language: l }),
 
       // ─── SITE ACTIONS ───────────────────────────────────────
-      addSite: (name, details = {}) => {
+      addSite: ({ name, ownerName, ownerPhone, address }) => {
         const site = {
           id: nanoid(),
           name: name.trim(),
           createdAt: new Date().toISOString(),
           status: 'active',
-          ownerName: details.ownerName || '',
-          ownerPhone: details.ownerPhone || '',
-          address: details.address || '',
+          ownerName: ownerName || '',
+          ownerPhone: ownerPhone || '',
+          address: address || '',
         }
         set((state) => ({ sites: [...state.sites, site] }))
         return site.id

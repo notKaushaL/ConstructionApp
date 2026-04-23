@@ -9,7 +9,7 @@ import SiteSummaryScreen from './screens/SiteSummaryScreen'
 import BottomNav from './components/BottomNav'
 import useStore from './store/useStore'
 import { TRANSLATIONS } from './i18n/translations'
-import { X, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 
 // ── Language context ──────────────────────────────────────────────────────────
 export const LangContext = createContext(TRANSLATIONS.en)
@@ -30,20 +30,32 @@ export default function App() {
 
   // Navigation History Management
   useEffect(() => {
-    // Initial state setup
-    if (window.history.state === null) {
+    // 1. Setup initial state so we always have a history stack
+    if (!window.history.state) {
       window.history.replaceState({ screen: 'home', params: {} }, '')
+      // Push an extra home state so the first "back" gesture triggers popstate
+      window.history.pushState({ screen: 'home', params: {} }, '')
     }
 
     const handlePopState = (e) => {
       if (e.state) {
+        // Normal navigation back
         setScreen(e.state.screen)
         setParams(e.state.params || {})
-      } else if (screen === 'home') {
-        // We reached the beginning of history on Home screen
-        setShowExitAlert(true)
-        // Push the state back so the user doesn't accidentally exit
-        window.history.pushState({ screen: 'home', params: {} }, '')
+        setShowExitAlert(false)
+      } else {
+        // We hit the bottom of our app's history
+        // If we are on home, show exit alert
+        if (screen === 'home') {
+          setShowExitAlert(true)
+          // Push the home state back so they don't actually exit the browser tab yet
+          window.history.pushState({ screen: 'home', params: {} }, '')
+        } else {
+          // If we were on another screen, just go home
+          setScreen('home')
+          setParams({})
+          window.history.pushState({ screen: 'home', params: {} }, '')
+        }
       }
     }
 
@@ -54,6 +66,7 @@ export default function App() {
   const navigate = (to, newParams = {}, replace = false) => {
     setScreen(to)
     setParams(newParams)
+    setShowExitAlert(false)
     
     if (replace) {
       window.history.replaceState({ screen: to, params: newParams }, '')
@@ -90,7 +103,7 @@ export default function App() {
 
         {/* Exit Confirmation Alert */}
         {showExitAlert && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
             <div className="bg-white w-full max-w-xs rounded-[32px] p-8 shadow-2xl animate-scale-in text-center">
               <div className="w-16 h-16 bg-[#FED447]/20 rounded-2xl flex items-center justify-center mx-auto mb-5">
                 <LogOut size={32} className="text-[#2B1D1C]" />
@@ -101,7 +114,7 @@ export default function App() {
               </p>
               <div className="space-y-3">
                 <button
-                  onClick={() => window.close() || (window.location.href = "about:blank")}
+                  onClick={() => window.location.href = "about:blank"}
                   className="w-full h-[52px] bg-[#2B1D1C] text-white font-bold rounded-2xl active:scale-95 transition-transform"
                 >
                   Exit App
