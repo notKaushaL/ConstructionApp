@@ -9,7 +9,7 @@ import SiteSummaryScreen from './screens/SiteSummaryScreen'
 import BottomNav from './components/BottomNav'
 import useStore from './store/useStore'
 import { TRANSLATIONS } from './i18n/translations'
-import { LogOut } from 'lucide-react'
+import { LogOut, Power } from 'lucide-react'
 
 // ── Language context ──────────────────────────────────────────────────────────
 export const LangContext = createContext(TRANSLATIONS.en)
@@ -31,44 +31,42 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
-  // Improved Navigation History Management
+  // ── Navigation History Management ───────────────────────────────────────────
   useEffect(() => {
     const handlePopState = (e) => {
       const state = e.state
       
-      // If we hit the sentinel OR a null state at the beginning
+      // If we hit the sentinel or bottom of history
       if (!state || state.type === 'ASHVIN_SENTINEL') {
         if (screenRef.current === 'home') {
-          // Show the exit alert
+          // Trigger the exit alert
           setShowExitAlert(true)
-          // Always push home state back to keep the user inside the app
+          // Re-push home to keep the user from actually leaving the app history
           window.history.pushState({ screen: 'home', params: {} }, '')
         } else {
-          // If we were on another screen, go back to home
+          // If on another screen, go to home
           setScreen('home')
           setParams({})
           window.history.pushState({ screen: 'home', params: {} }, '')
         }
       } else if (state.screen) {
-        // Normal navigation between app screens
+        // Normal app navigation
         setScreen(state.screen)
         setParams(state.params || {})
         setShowExitAlert(false)
       }
     }
 
-    // Force setup the history stack correctly on load
-    // We replace the current (initial) entry with a sentinel
+    // Setup: Sentinel -> Home
+    // We only do this once. replaceState is important here.
     window.history.replaceState({ type: 'ASHVIN_SENTINEL' }, '')
-    // Then we push the home state as the active one
     window.history.pushState({ screen: 'home', params: {} }, '')
 
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, []) // Bind once on mount
+  }, []) // Empty deps ensures this only runs once on app mount
 
   const navigate = (to, newParams = {}, replace = false) => {
-    // Prevent redundant history entries for the same view
     if (screen === to && JSON.stringify(params) === JSON.stringify(newParams)) return
 
     setScreen(to)
@@ -110,13 +108,10 @@ export default function App() {
 
         {/* Exit Confirmation Alert Overlay */}
         {showExitAlert && (
-          <div 
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-fade-in"
-            style={{ pointerEvents: 'auto' }}
-          >
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-fade-in">
             <div className="bg-white dark:bg-[#1F2937] w-full max-w-xs rounded-[32px] p-8 shadow-2xl animate-scale-in text-center border border-gray-100 dark:border-white/10">
               <div className="w-20 h-20 bg-[#FED447]/15 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <LogOut size={40} className="text-[#FED447] dark:text-[#FED447]" />
+                <Power size={40} className="text-[#FED447]" />
               </div>
               <h3 className="text-[22px] font-bold text-[#2B1D1C] dark:text-white mb-2 font-display">Exit App?</h3>
               <p className="text-[15px] text-[#A0A0A0] dark:text-gray-400 leading-relaxed mb-10">
@@ -125,13 +120,16 @@ export default function App() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => {
-                    // Try to close, if fails (standard browser behavior), let them know it's safe to swipe away
-                    if (window.close()) {
-                      // Successfully closed
+                    // 1. Try to close the window
+                    window.close();
+                    
+                    // 2. If it fails (which it usually does for security), 
+                    // we show a helpful instruction instead of a blank page.
+                    const msg = "To exit, please swipe the app away from your recent apps or close this tab.";
+                    if (confirm(msg)) {
+                       setShowExitAlert(false);
                     } else {
-                      // Fallback: show a "Safe to close" state or just alert
-                      alert("It is now safe to swipe up and close the app.");
-                      setShowExitAlert(false);
+                       setShowExitAlert(false);
                     }
                   }}
                   className="w-full h-[56px] bg-[#2B1D1C] dark:bg-[#FED447] text-white dark:text-[#2B1D1C] font-bold text-[16px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-black/20"
