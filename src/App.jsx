@@ -21,6 +21,7 @@ export default function App() {
   const [screen, setScreen] = useState('home')
   const [params, setParams] = useState({})
   const [showExitAlert, setShowExitAlert] = useState(false)
+  const [isShutdown, setIsShutdown] = useState(false)
   const { theme, language } = useStore()
 
   const screenRef = useRef('home')
@@ -34,6 +35,8 @@ export default function App() {
   // ── Navigation History Management ───────────────────────────────────────────
   useEffect(() => {
     const handlePopState = (e) => {
+      if (isShutdown) return // Do nothing if shutdown
+
       const state = e.state
       
       // If we hit the sentinel or bottom of history
@@ -83,6 +86,25 @@ export default function App() {
   const showNav = NAV_SCREENS.includes(screen)
   const t = TRANSLATIONS[language] || TRANSLATIONS.en
 
+  if (isShutdown) {
+    return (
+      <div className="fixed inset-0 bg-[#2B1D1C] flex flex-col items-center justify-center p-8 z-[10000]">
+        <div className="w-24 h-24 bg-[#FED447]/10 rounded-[40px] flex items-center justify-center mb-8 animate-pulse">
+          <Power size={48} className="text-[#FED447]" />
+        </div>
+        <h2 className="text-[28px] font-bold text-white mb-4 font-display">App Exited</h2>
+        <p className="text-[16px] text-[#A0A0A0] text-center leading-relaxed">
+          The session has been safely closed.<br />
+          You can now swipe the app away.
+        </p>
+        <div className="mt-12 flex flex-col items-center gap-2">
+          <div className="w-1 h-8 bg-white/10 rounded-full animate-bounce"></div>
+          <span className="text-[12px] font-bold text-white/30 uppercase tracking-widest">Swipe Up to Close</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <LangContext.Provider value={t}>
       <div className="flex flex-col h-full overflow-hidden">
@@ -120,17 +142,9 @@ export default function App() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => {
-                    // 1. Try to close the window
-                    window.close();
-                    
-                    // 2. If it fails (which it usually does for security), 
-                    // we show a helpful instruction instead of a blank page.
-                    const msg = "To exit, please swipe the app away from your recent apps or close this tab.";
-                    if (confirm(msg)) {
-                       setShowExitAlert(false);
-                    } else {
-                       setShowExitAlert(false);
-                    }
+                    // Try to close, then shutdown
+                    try { window.close(); } catch (e) {}
+                    setIsShutdown(true);
                   }}
                   className="w-full h-[56px] bg-[#2B1D1C] dark:bg-[#FED447] text-white dark:text-[#2B1D1C] font-bold text-[16px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-black/20"
                 >
