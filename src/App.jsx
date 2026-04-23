@@ -1,4 +1,4 @@
-import { useEffect, createContext, useContext, useState } from 'react'
+import { useEffect, createContext, useContext, useState, useRef } from 'react'
 import HomeScreen from './screens/HomeScreen'
 import LedgerScreen from './screens/LedgerScreen'
 import AddEntryScreen from './screens/AddEntryScreen'
@@ -23,35 +23,46 @@ export default function App() {
   const [showExitAlert, setShowExitAlert] = useState(false)
   const { theme, language } = useStore()
 
-  // Apply theme to html element so it covers body background
+  // Track current screen in a ref for popstate handler
+  const screenRef = useRef('home')
+  useEffect(() => { screenRef.current = screen }, [screen])
+
+  // Apply theme to html element
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
   // Navigation History Management
   useEffect(() => {
-    // 1. Setup initial state so we always have a history stack
-    if (!window.history.state) {
-      window.history.replaceState({ screen: 'home', params: {} }, '')
-      // Push an extra home state so the first "back" gesture triggers popstate
+    // 1. Initial history setup
+    const setupHistory = () => {
+      // Sentinel state to detect bottom of stack
+      window.history.replaceState({ type: 'SENTINEL' }, '')
+      // Initial home state
       window.history.pushState({ screen: 'home', params: {} }, '')
+    }
+    
+    if (!window.history.state || window.history.state.type !== 'SENTINEL') {
+      setupHistory()
     }
 
     const handlePopState = (e) => {
-      if (e.state) {
-        // Normal navigation back
-        setScreen(e.state.screen)
-        setParams(e.state.params || {})
+      const state = e.state
+      
+      if (state && state.screen) {
+        // Moving between app screens via back button
+        setScreen(state.screen)
+        setParams(state.params || {})
         setShowExitAlert(false)
-      } else {
-        // We hit the bottom of our app's history
-        // If we are on home, show exit alert
-        if (screen === 'home') {
+      } else if (state && state.type === 'SENTINEL') {
+        // Hit the bottom sentinel
+        if (screenRef.current === 'home') {
+          // If on home, show exit confirmation
           setShowExitAlert(true)
-          // Push the home state back so they don't actually exit the browser tab yet
+          // Push home state back so user doesn't exit browser tab immediately
           window.history.pushState({ screen: 'home', params: {} }, '')
         } else {
-          // If we were on another screen, just go home
+          // If elsewhere, just go home
           setScreen('home')
           setParams({})
           window.history.pushState({ screen: 'home', params: {} }, '')
@@ -61,9 +72,12 @@ export default function App() {
 
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [screen])
+  }, []) // Bind once
 
   const navigate = (to, newParams = {}, replace = false) => {
+    // Prevent duplicate states if navigating to same screen
+    if (screen === to && JSON.stringify(params) === JSON.stringify(newParams)) return
+
     setScreen(to)
     setParams(newParams)
     setShowExitAlert(false)
@@ -103,7 +117,7 @@ export default function App() {
 
         {/* Exit Confirmation Alert */}
         {showExitAlert && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="bg-white w-full max-w-xs rounded-[32px] p-8 shadow-2xl animate-scale-in text-center">
               <div className="w-16 h-16 bg-[#FED447]/20 rounded-2xl flex items-center justify-center mx-auto mb-5">
                 <LogOut size={32} className="text-[#2B1D1C]" />
