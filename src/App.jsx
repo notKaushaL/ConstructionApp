@@ -70,7 +70,7 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLanding(false)
-    }, 2500) // Optimized for a smooth 2.5s professional intro
+    }, 2800) // Slightly increased to allow for the clean text glow finish
     return () => clearTimeout(timer)
   }, [])
 
@@ -107,42 +107,45 @@ export default function App() {
     return (
       <div className="fixed inset-0 bg-white z-[20000] flex flex-col items-center justify-center overflow-hidden">
         <div className="relative flex items-center justify-center">
-          {/* Circular Progress Ring */}
-          <svg className="absolute w-44 h-44 animate-rotate" viewBox="0 0 100 100">
-            <circle
-              cx="50"
-              cy="50"
-              r="45"
-              fill="none"
-              stroke="#F3F4F6"
-              strokeWidth="2"
-            />
+          {/* Anti-Clockwise Tracing Bar */}
+          <svg 
+            className="absolute w-48 h-48 -rotate-90" 
+            viewBox="0 0 100 100"
+            style={{ transform: 'rotate(-90deg) scaleX(-1)' }}
+          >
             <circle
               cx="50"
               cy="50"
               r="45"
               fill="none"
               stroke="#FED447"
-              strokeWidth="3"
+              strokeWidth="2"
               strokeLinecap="round"
-              strokeDasharray="283"
-              className="animate-dash"
+              className="animate-trace"
             />
           </svg>
 
-          {/* Logo Container - Simplified to match native splash for seamless transition */}
-          <div className="w-32 h-32 flex items-center justify-center p-2 animate-logo-reveal relative z-10">
-            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+          {/* Logo - Minimal/Subtle Animation */}
+          <div className="w-32 h-32 flex items-center justify-center p-3 animate-logo-reveal relative z-10">
+            <img 
+              src="/logo.png" 
+              alt="Logo" 
+              className="w-full h-full object-contain animate-subtle-logo" 
+            />
           </div>
         </div>
         
-        <div className="mt-12 text-center animate-name-slide-up">
-          <h1 className="text-[26px] font-bold font-display text-[#2B1D1C] tracking-tight">
+        <div className="mt-14 text-center animate-name-slide-up">
+          <h1 className="text-[24px] font-bold font-display text-[#2B1D1C] tracking-tight uppercase animate-text-glow">
             Ashvin Construction
           </h1>
-          <p className="text-[12px] font-bold text-[#A0A0A0] uppercase tracking-[0.4em] mt-1 ml-1">
-            VADODARA
-          </p>
+          <div className="flex items-center justify-center gap-3 mt-1">
+            <div className="h-[1px] w-8 bg-[#FED447]/30"></div>
+            <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-[0.5em]">
+              VADODARA
+            </p>
+            <div className="h-[1px] w-8 bg-[#FED447]/30"></div>
+          </div>
         </div>
       </div>
     )
@@ -204,7 +207,7 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => setShowExitAlert(false)}
-                  className="w-full h-[52px] bg-[#F5F5F5] dark:bg-white/5 border border-transparent dark:border-[#FED447]/30 text-[#2B1D1C] dark:text-white font-bold text-[15px] rounded-2xl active:scale-95 transition-transform"
+                  className="initial-class w-full h-[52px] bg-[#F5F5F5] dark:bg-white/5 border border-transparent dark:border-[#FED447]/30 text-[#2B1D1C] dark:text-white font-bold text-[15px] rounded-2xl active:scale-95 transition-transform"
                 >
                   Stay
                 </button>
