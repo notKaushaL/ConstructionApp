@@ -70,7 +70,7 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLanding(false)
-    }, 2800) // 2.8 seconds for the professional intro
+    }, 2500) // Optimized for a smooth 2.5s professional intro
     return () => clearTimeout(timer)
   }, [])
 
@@ -106,33 +106,44 @@ export default function App() {
   if (isLanding) {
     return (
       <div className="fixed inset-0 bg-white z-[20000] flex flex-col items-center justify-center overflow-hidden">
-        <div className="relative">
-          <div className="w-32 h-32 rounded-[40px] bg-[#FFF8DC] shadow-2xl flex items-center justify-center p-4 animate-logo-reveal">
+        <div className="relative flex items-center justify-center">
+          {/* Circular Progress Ring */}
+          <svg className="absolute w-44 h-44 animate-rotate" viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              stroke="#F3F4F6"
+              strokeWidth="2"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              stroke="#FED447"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeDasharray="283"
+              className="animate-dash"
+            />
+          </svg>
+
+          {/* Logo Container - Simplified to match native splash for seamless transition */}
+          <div className="w-32 h-32 flex items-center justify-center p-2 animate-logo-reveal relative z-10">
             <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
-          {/* Subtle glow effect */}
-          <div className="absolute inset-0 bg-[#FED447]/20 blur-3xl -z-10 rounded-full animate-pulse"></div>
         </div>
         
-        <div className="mt-8 text-center animate-name-slide-up">
-          <h1 className="text-[28px] font-bold font-display text-[#2B1D1C] tracking-tight">
+        <div className="mt-12 text-center animate-name-slide-up">
+          <h1 className="text-[26px] font-bold font-display text-[#2B1D1C] tracking-tight">
             Ashvin Construction
           </h1>
-          <p className="text-[12px] font-bold text-[#A0A0A0] uppercase tracking-[0.3em] mt-1 ml-1">
+          <p className="text-[12px] font-bold text-[#A0A0A0] uppercase tracking-[0.4em] mt-1 ml-1">
             VADODARA
           </p>
         </div>
-
-        {/* Minimalist loader bar */}
-        <div className="absolute bottom-16 w-32 h-[3px] bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full bg-[#FED447] animate-[progress_2.5s_ease-in-out_forwards]"></div>
-        </div>
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes progress {
-            0% { width: 0%; }
-            100% { width: 100%; }
-          }
-        `}} />
       </div>
     )
   }
