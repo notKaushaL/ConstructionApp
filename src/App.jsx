@@ -23,7 +23,6 @@ export default function App() {
   const [showExitAlert, setShowExitAlert] = useState(false)
   const { theme, language } = useStore()
 
-  // Track current screen in a ref for popstate handler
   const screenRef = useRef('home')
   useEffect(() => { screenRef.current = screen }, [screen])
 
@@ -32,50 +31,44 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
-  // Navigation History Management
+  // Improved Navigation History Management
   useEffect(() => {
-    // 1. Initial history setup
-    const setupHistory = () => {
-      // Sentinel state to detect bottom of stack
-      window.history.replaceState({ type: 'SENTINEL' }, '')
-      // Initial home state
-      window.history.pushState({ screen: 'home', params: {} }, '')
-    }
-    
-    if (!window.history.state || window.history.state.type !== 'SENTINEL') {
-      setupHistory()
-    }
-
     const handlePopState = (e) => {
       const state = e.state
       
-      if (state && state.screen) {
-        // Moving between app screens via back button
-        setScreen(state.screen)
-        setParams(state.params || {})
-        setShowExitAlert(false)
-      } else if (state && state.type === 'SENTINEL') {
-        // Hit the bottom sentinel
+      // If we hit the sentinel OR a null state at the beginning
+      if (!state || state.type === 'ASHVIN_SENTINEL') {
         if (screenRef.current === 'home') {
-          // If on home, show exit confirmation
+          // Show the exit alert
           setShowExitAlert(true)
-          // Push home state back so user doesn't exit browser tab immediately
+          // Always push home state back to keep the user inside the app
           window.history.pushState({ screen: 'home', params: {} }, '')
         } else {
-          // If elsewhere, just go home
+          // If we were on another screen, go back to home
           setScreen('home')
           setParams({})
           window.history.pushState({ screen: 'home', params: {} }, '')
         }
+      } else if (state.screen) {
+        // Normal navigation between app screens
+        setScreen(state.screen)
+        setParams(state.params || {})
+        setShowExitAlert(false)
       }
     }
 
+    // Force setup the history stack correctly on load
+    // We replace the current (initial) entry with a sentinel
+    window.history.replaceState({ type: 'ASHVIN_SENTINEL' }, '')
+    // Then we push the home state as the active one
+    window.history.pushState({ screen: 'home', params: {} }, '')
+
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, []) // Bind once
+  }, []) // Bind once on mount
 
   const navigate = (to, newParams = {}, replace = false) => {
-    // Prevent duplicate states if navigating to same screen
+    // Prevent redundant history entries for the same view
     if (screen === to && JSON.stringify(params) === JSON.stringify(newParams)) return
 
     setScreen(to)
@@ -94,8 +87,8 @@ export default function App() {
 
   return (
     <LangContext.Provider value={t}>
-      <div className="flex flex-col h-full">
-        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
           {screen === 'home' && <HomeScreen onNavigate={navigate} />}
           {screen === 'ledger' && params.siteId && <LedgerScreen siteId={params.siteId} onNavigate={navigate} />}
           {screen === 'addEntry' && params.siteId && <AddEntryScreen siteId={params.siteId} entryToEdit={params.entryToEdit} onNavigate={navigate} />}
@@ -115,27 +108,36 @@ export default function App() {
           />
         )}
 
-        {/* Exit Confirmation Alert */}
+        {/* Exit Confirmation Alert Overlay */}
         {showExitAlert && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white w-full max-w-xs rounded-[32px] p-8 shadow-2xl animate-scale-in text-center">
-              <div className="w-16 h-16 bg-[#FED447]/20 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <LogOut size={32} className="text-[#2B1D1C]" />
+          <div 
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/70 backdrop-blur-md animate-fade-in"
+            style={{ pointerEvents: 'auto' }}
+          >
+            <div className="bg-white w-full max-w-xs rounded-[32px] p-8 shadow-2xl animate-scale-in text-center border border-gray-100">
+              <div className="w-20 h-20 bg-[#FED447]/15 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <LogOut size={40} className="text-[#2B1D1C]" />
               </div>
-              <h3 className="text-[20px] font-bold text-[#2B1D1C] mb-2">Close App?</h3>
-              <p className="text-[14px] text-[#A0A0A0] leading-relaxed mb-8">
-                Are you sure you want to exit Ashvin Construction?
+              <h3 className="text-[22px] font-bold text-[#2B1D1C] mb-2 font-display">Exit App?</h3>
+              <p className="text-[15px] text-[#A0A0A0] leading-relaxed mb-10">
+                Are you sure you want to close Ashvin Construction?
               </p>
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 <button
-                  onClick={() => window.location.href = "about:blank"}
-                  className="w-full h-[52px] bg-[#2B1D1C] text-white font-bold rounded-2xl active:scale-95 transition-transform"
+                  onClick={() => {
+                    // Try standard close, then fallback
+                    window.close();
+                    setTimeout(() => {
+                      window.location.href = "about:blank";
+                    }, 100);
+                  }}
+                  className="w-full h-[56px] bg-[#2B1D1C] text-white font-bold text-[16px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-black/10"
                 >
                   Exit App
                 </button>
                 <button
                   onClick={() => setShowExitAlert(false)}
-                  className="w-full h-[52px] bg-[#F5F5F5] text-[#A0A0A0] font-bold rounded-2xl active:scale-95 transition-transform"
+                  className="w-full h-[52px] bg-[#F5F5F5] text-[#2B1D1C] font-bold text-[15px] rounded-2xl active:scale-95 transition-transform"
                 >
                   Stay
                 </button>
