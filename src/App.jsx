@@ -81,22 +81,16 @@ export default function App() {
   }
 
   const handleExitApp = () => {
-    setShowExitAlert(false);
-    
-    // 1. Try to close the window using various tricks
+    // 1. Just try to close
     try {
       window.close();
-      if (!window.closed) {
-        const win = window.open("", "_self");
-        win.close();
-      }
-    } catch (e) {
-      console.log('Close attempt failed');
-    }
+      const win = window.open("", "_self");
+      win.close();
+    } catch (e) {}
 
-    // 2. Regardless of whether close worked, show the shutdown screen
-    // This covers the case where the browser blocks the close.
+    // 2. Fallback to black screen immediately
     setIsShutdown(true);
+    setShowExitAlert(false);
   }
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.en
@@ -106,18 +100,11 @@ export default function App() {
   if (isShutdown) {
     return (
       <div className="fixed inset-0 bg-[#2B1D1C] flex flex-col items-center justify-center p-8 z-[10001]">
-        <div className="w-24 h-24 bg-[#FED447]/10 rounded-[40px] flex items-center justify-center mb-8 animate-pulse">
-          <Power size={48} className="text-[#FED447]" />
+        <div className="w-20 h-20 bg-[#FED447]/10 rounded-[32px] flex items-center justify-center mb-6">
+          <Power size={40} className="text-[#FED447]" />
         </div>
-        <h2 className="text-[28px] font-bold text-white mb-4 font-display">App Closed</h2>
-        <p className="text-[16px] text-[#A0A0A0] text-center leading-relaxed">
-          The session has been ended.<br />
-          You can now safely swipe this app away.
-        </p>
-        <div className="mt-12 flex flex-col items-center gap-2">
-          <div className="w-1 h-8 bg-white/10 rounded-full animate-bounce"></div>
-          <span className="text-[12px] font-bold text-white/30 uppercase tracking-widest">Swipe Up to Close</span>
-        </div>
+        <h2 className="text-[24px] font-bold text-white mb-2 font-display">App Closed</h2>
+        <p className="text-[14px] text-[#A0A0A0] text-center">Please swipe up to exit.</p>
       </div>
     )
   }
@@ -149,17 +136,17 @@ export default function App() {
         {showExitAlert && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-fade-in">
             <div className="bg-white dark:bg-[#1F2937] w-full max-w-xs rounded-[32px] p-8 shadow-2xl animate-scale-in text-center border border-gray-100 dark:border-white/10">
-              <div className="w-20 h-20 bg-[#FED447]/15 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <Power size={40} className="text-[#FED447]" />
+              <div className="w-16 h-16 bg-[#FED447]/15 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <Power size={32} className="text-[#FED447]" />
               </div>
-              <h3 className="text-[22px] font-bold text-[#2B1D1C] dark:text-white mb-2 font-display">Exit App?</h3>
-              <p className="text-[15px] text-[#A0A0A0] dark:text-gray-400 leading-relaxed mb-10">
+              <h3 className="text-[20px] font-bold text-[#2B1D1C] dark:text-white mb-2 font-display">Exit App?</h3>
+              <p className="text-[14px] text-[#A0A0A0] dark:text-gray-400 leading-relaxed mb-8">
                 Are you sure you want to close Ashvin Construction?
               </p>
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handleExitApp}
-                  className="w-full h-[56px] bg-[#2B1D1C] dark:bg-[#FED447] text-white dark:text-[#2B1D1C] font-bold text-[16px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-black/20"
+                  className="w-full h-[52px] bg-[#2B1D1C] dark:bg-[#FED447] text-white dark:text-[#2B1D1C] font-bold text-[15px] rounded-2xl active:scale-95 transition-transform"
                 >
                   Exit App
                 </button>
