@@ -111,33 +111,36 @@ export default function App() {
         {/* Exit Confirmation Alert Overlay */}
         {showExitAlert && (
           <div 
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/70 backdrop-blur-md animate-fade-in"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-fade-in"
             style={{ pointerEvents: 'auto' }}
           >
-            <div className="bg-white w-full max-w-xs rounded-[32px] p-8 shadow-2xl animate-scale-in text-center border border-gray-100">
+            <div className="bg-white dark:bg-[#1F2937] w-full max-w-xs rounded-[32px] p-8 shadow-2xl animate-scale-in text-center border border-gray-100 dark:border-white/10">
               <div className="w-20 h-20 bg-[#FED447]/15 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <LogOut size={40} className="text-[#2B1D1C]" />
+                <LogOut size={40} className="text-[#FED447] dark:text-[#FED447]" />
               </div>
-              <h3 className="text-[22px] font-bold text-[#2B1D1C] mb-2 font-display">Exit App?</h3>
-              <p className="text-[15px] text-[#A0A0A0] leading-relaxed mb-10">
+              <h3 className="text-[22px] font-bold text-[#2B1D1C] dark:text-white mb-2 font-display">Exit App?</h3>
+              <p className="text-[15px] text-[#A0A0A0] dark:text-gray-400 leading-relaxed mb-10">
                 Are you sure you want to close Ashvin Construction?
               </p>
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => {
-                    // Try standard close, then fallback
-                    window.close();
-                    setTimeout(() => {
-                      window.location.href = "about:blank";
-                    }, 100);
+                    // Try to close, if fails (standard browser behavior), let them know it's safe to swipe away
+                    if (window.close()) {
+                      // Successfully closed
+                    } else {
+                      // Fallback: show a "Safe to close" state or just alert
+                      alert("It is now safe to swipe up and close the app.");
+                      setShowExitAlert(false);
+                    }
                   }}
-                  className="w-full h-[56px] bg-[#2B1D1C] text-white font-bold text-[16px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-black/10"
+                  className="w-full h-[56px] bg-[#2B1D1C] dark:bg-[#FED447] text-white dark:text-[#2B1D1C] font-bold text-[16px] rounded-2xl active:scale-95 transition-transform shadow-lg shadow-black/20"
                 >
                   Exit App
                 </button>
                 <button
                   onClick={() => setShowExitAlert(false)}
-                  className="w-full h-[52px] bg-[#F5F5F5] text-[#2B1D1C] font-bold text-[15px] rounded-2xl active:scale-95 transition-transform"
+                  className="w-full h-[52px] bg-[#F5F5F5] dark:bg-white/5 border border-transparent dark:border-[#FED447]/30 text-[#2B1D1C] dark:text-white font-bold text-[15px] rounded-2xl active:scale-95 transition-transform"
                 >
                   Stay
                 </button>
