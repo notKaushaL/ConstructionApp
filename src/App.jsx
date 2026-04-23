@@ -22,6 +22,7 @@ export default function App() {
   const [params, setParams] = useState({})
   const [showExitAlert, setShowExitAlert] = useState(false)
   const [isShutdown, setIsShutdown] = useState(false)
+  const [isLanding, setIsLanding] = useState(true)
   const { theme, language } = useStore()
 
   const screenRef = useRef('home')
@@ -35,7 +36,7 @@ export default function App() {
   // Navigation History Management
   useEffect(() => {
     const handlePopState = (e) => {
-      if (isShutdown) return
+      if (isShutdown || isLanding) return
 
       const state = e.state
       
@@ -63,7 +64,15 @@ export default function App() {
 
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [isShutdown])
+  }, [isShutdown, isLanding])
+
+  // Handle landing screen duration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLanding(false)
+    }, 2800) // 2.8 seconds for the professional intro
+    return () => clearTimeout(timer)
+  }, [])
 
   const navigate = (to, newParams = {}, replace = false) => {
     if (isShutdown) return
@@ -81,20 +90,52 @@ export default function App() {
   }
 
   const handleExitApp = () => {
-    // 1. Just try to close
+    setShowExitAlert(false);
     try {
       window.close();
       const win = window.open("", "_self");
       win.close();
     } catch (e) {}
-
-    // 2. Fallback to black screen immediately
     setIsShutdown(true);
-    setShowExitAlert(false);
   }
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.en
-  const showNav = NAV_SCREENS.includes(screen) && !isShutdown
+  const showNav = NAV_SCREENS.includes(screen) && !isShutdown && !isLanding
+
+  // ── RENDER LANDING / SPLASH SCREEN ──────────────────────────────────────────
+  if (isLanding) {
+    return (
+      <div className="fixed inset-0 bg-white z-[20000] flex flex-col items-center justify-center overflow-hidden">
+        <div className="relative">
+          <div className="w-32 h-32 rounded-[40px] bg-[#FFF8DC] shadow-2xl flex items-center justify-center p-4 animate-logo-reveal">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+          </div>
+          {/* Subtle glow effect */}
+          <div className="absolute inset-0 bg-[#FED447]/20 blur-3xl -z-10 rounded-full animate-pulse"></div>
+        </div>
+        
+        <div className="mt-8 text-center animate-name-slide-up">
+          <h1 className="text-[28px] font-bold font-display text-[#2B1D1C] tracking-tight">
+            Ashvin Construction
+          </h1>
+          <p className="text-[12px] font-bold text-[#A0A0A0] uppercase tracking-[0.3em] mt-1 ml-1">
+            VADODARA
+          </p>
+        </div>
+
+        {/* Minimalist loader bar */}
+        <div className="absolute bottom-16 w-32 h-[3px] bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-[#FED447] animate-[progress_2.5s_ease-in-out_forwards]"></div>
+        </div>
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+          }
+        `}} />
+      </div>
+    )
+  }
 
   // ── RENDER SHUTDOWN SCREEN ──────────────────────────────────────────────────
   if (isShutdown) {

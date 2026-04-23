@@ -12,7 +12,7 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'Ashvin Construction',
-        short_name: 'AshvinConst',
+        short_name: 'Ashvin Construction',
         description: 'Local-first Construction Expense Tracker for Vadodara',
         theme_color: '#FED447',
         background_color: '#FFFFFF',
