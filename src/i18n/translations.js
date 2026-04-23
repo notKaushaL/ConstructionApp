@@ -4,7 +4,7 @@ export const TRANSLATIONS = {
     // Nav
     home: 'Home', ledger: 'Ledger', summary: 'Summary', settings: 'Settings',
     // Home
-    mySites: 'My Sites', addFirstSite: '+ Add First Site', newSite: 'New Site',
+    mySites: 'My Sites', addFirstSite: 'Add First Site', newSite: 'New Site',
     addSite: 'Add Site', siteName: 'Site Name', sitePlaceholder: 'e.g. Rajnagar Project',
     activeSites: 'Active Sites', completedSites: 'Completed',
     noSites: 'No Sites Yet', noSitesDesc: 'Add your first construction site to start tracking expenses.',
@@ -16,7 +16,8 @@ export const TRANSLATIONS = {
     siteAddress: 'Location / Address', siteAddressPlaceholder: 'e.g. 12, Alkapuri Society, Vadodara',
     siteDetails: 'Site Details',
     // Ledger
-    dailyLedger: 'Daily Ledger', addEntry: 'Add Entry', addFirstEntry: '+ Add First Entry',
+    dailyLedger: 'Daily Ledger', addEntry: 'Add Expense', addFirstEntry: 'Add First Expense',
+    editEntry: 'Edit Expense',
     noEntries: 'No Entries Yet', noEntriesDesc: 'Start adding labor or material expenses.',
     editSiteName: 'Edit Site Name',
     markCompleted: 'Mark as Completed', reopenProject: 'Reopen Project',
@@ -40,6 +41,10 @@ export const TRANSLATIONS = {
     electrician: 'Electrician', carpenter: 'Carpenter', painter: 'Painter',
     welder: 'Welder', salaat: 'Centering', helper: 'Helper',
     karigarHelper: 'Karigar + Helper', others: 'Others',
+    // Material presets
+    cement: 'Cement', steel: 'Steel', sand: 'Sand', bricks: 'Bricks', paint: 'Paint',
+    wood: 'Wood', tiles: 'Tiles', pipes: 'Pipes', gravel: 'Gravel', other: 'Other',
+    qtyLabel: 'No. of Bags', unitLabel: 'bags', priceLabel: '₹ per Bag',
     // Misc categories
     food: 'Food', rent: 'Rent', transport: 'Transport', tools: 'Tools',
     // Form
@@ -66,7 +71,7 @@ export const TRANSLATIONS = {
     // Nav
     home: 'होम', ledger: 'खाता', summary: 'सारांश', settings: 'सेटिंग',
     // Home
-    mySites: 'मेरी साइट्स', addFirstSite: '+ पहली साइट जोड़ें', newSite: 'नई साइट',
+    mySites: 'मेरी साइट्स', addFirstSite: 'पहली साइट जोड़ें', newSite: 'नई साइट',
     addSite: 'साइट जोड़ें', siteName: 'साइट का नाम', sitePlaceholder: 'जैसे राजनगर प्रोजेक्ट',
     activeSites: 'चालू साइट्स', completedSites: 'पूर्ण',
     noSites: 'कोई साइट नहीं', noSitesDesc: 'खर्चों को ट्रैक करने के लिए पहली साइट जोड़ें।',
@@ -78,7 +83,8 @@ export const TRANSLATIONS = {
     siteAddress: 'पता / लोकेशन', siteAddressPlaceholder: 'जैसे 12, अलकापुरी सोसायटी, वडोदरा',
     siteDetails: 'साइट विवरण',
     // Ledger
-    dailyLedger: 'दैनिक खाता', addEntry: 'एंट्री जोड़ें', addFirstEntry: '+ पहली एंट्री',
+    dailyLedger: 'दैनिक खाता', addEntry: 'खर्च जोड़ें', addFirstEntry: 'पहला खर्च जोड़ें',
+    editEntry: 'खर्च बदलें',
     noEntries: 'कोई एंट्री नहीं', noEntriesDesc: 'मजदूरी या सामग्री खर्च जोड़ें।',
     editSiteName: 'साइट का नाम बदलें',
     markCompleted: 'पूर्ण करें', reopenProject: 'फिर से खोलें',
@@ -102,6 +108,9 @@ export const TRANSLATIONS = {
     electrician: 'इलेक्ट्रिशियन', carpenter: 'बढ़ई', painter: 'पेंटर',
     welder: 'वेल्डर', salaat: 'सेंटरिंग', helper: 'हेल्पर',
     karigarHelper: 'कारीगर + हेल्पर', others: 'अन्य',
+    // Material presets
+    cement: 'सीमेंट', steel: 'स्टील (लोहा)', sand: 'रेत (रेती)', bricks: 'ईंटें', paint: 'पेंट',
+    wood: 'लकड़ी', tiles: 'टाइल्स', pipes: 'पाइप', gravel: 'कंक्रीट/कपची', other: 'अन्य',
     // Misc categories
     food: 'खाना', rent: 'किराया', transport: 'वाहन', tools: 'औज़ार',
     // Form
@@ -128,7 +137,7 @@ export const TRANSLATIONS = {
     // Nav
     home: 'હોમ', ledger: 'ખાતાવહી', summary: 'સારાંશ', settings: 'સેટિંગ',
     // Home
-    mySites: 'મારી સાઇટો', addFirstSite: '+ પહેલી સાઇટ ઉમેરો', newSite: 'નવી સાઇટ',
+    mySites: 'મારી સાઇટો', addFirstSite: 'પહેલી સાઇટ ઉમેરો', newSite: 'નવી સાઇટ',
     addSite: 'સાઇટ ઉમેરો', siteName: 'સાઇટનું નામ', sitePlaceholder: 'દા.ત. રાજનગર પ્રોજેક્ટ',
     activeSites: 'ચાલુ સાઇટો', completedSites: 'પૂર્ણ',
     noSites: 'કોઈ સાઇટ નથી', noSitesDesc: 'ખર્ચ ટ્રૅક કરવા પહેલી સાઇટ ઉમેરો.',
@@ -140,7 +149,8 @@ export const TRANSLATIONS = {
     siteAddress: 'સરનામું / લોકેશન', siteAddressPlaceholder: 'દા.ત. 12, અલકાપુરી સોસાયટી, વડોદરા',
     siteDetails: 'સાઇટ વિગતો',
     // Ledger
-    dailyLedger: 'રોજનું ખાતું', addEntry: 'એન્ટ્રી ઉમેરો', addFirstEntry: '+ પહેલી એન્ટ્રી',
+    dailyLedger: 'રોજનું ખાતું', addEntry: 'ખર્ચ ઉમેરો', addFirstEntry: 'પહેલો ખર્ચ ઉમેરો',
+    editEntry: 'ખર્ચ બદલો',
     noEntries: 'કોઈ એન્ટ્રી નથી', noEntriesDesc: 'મજૂરી અથવા સામાનનો ખર્ચ ઉમેરો.',
     editSiteName: 'સાઇટનું નામ બદલો',
     markCompleted: 'પૂર્ણ કરો', reopenProject: 'ફરી ચાલુ કરો',
@@ -164,6 +174,9 @@ export const TRANSLATIONS = {
     electrician: 'ઇલેક્ટ્રિશિયન', carpenter: 'સુથાર', painter: 'રંગકામ',
     welder: 'વેલ્ડર', salaat: 'સેન્ટરિંગ', helper: 'હેલ્પર',
     karigarHelper: 'કારીગર + હેલ્પર', others: 'બીજું',
+    // Material presets
+    cement: 'સિમેન્ટ', steel: 'લોખંડ (સ્ટીલ)', sand: 'રેતી', bricks: 'ઈંટો', paint: 'કલર/પેઇન્ટ',
+    wood: 'લાકડું', tiles: 'ટાઇલ્સ', pipes: 'પાઇપ', gravel: 'કપચી', other: 'બીજું',
     // Misc categories
     food: 'જમવાનું', rent: 'ભાડું', transport: 'વાહન', tools: 'ઓજાર',
     // Form

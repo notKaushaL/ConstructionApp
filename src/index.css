@@ -26,7 +26,8 @@ html, body {
   overflow: hidden;
   overscroll-behavior: none;
   font-family: 'Inter', sans-serif;
-  background-color: #E8E8E8;
+  /* Match root background to avoid edge lines */
+  background-color: #FFFFFF;
   color: #2B1D1C;
   transition: background-color 0.3s ease;
 }
@@ -42,9 +43,19 @@ html, body {
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  /* Remove box-shadow on mobile to fix white line at edges */
+  /* Force no border/outline/shadow that could bleed */
+  border: none;
+  outline: none;
   box-shadow: none;
   transition: background-color 0.3s ease;
+}
+
+/* On small screens, ensure no gap at all */
+@media (max-width: 430px) {
+  #root {
+    max-width: 100%;
+    margin: 0;
+  }
 }
 
 /* Only add shadow on desktop where it looks good */
@@ -152,8 +163,13 @@ html, body {
   color-scheme: dark;
 }
 
-[data-theme="dark"] body { background-color: #0d1117; }
-[data-theme="dark"] #root { background-color: #111827; }
+[data-theme="dark"] html,
+[data-theme="dark"] body { 
+  background-color: #111827 !important; 
+}
+[data-theme="dark"] #root { 
+  background-color: #111827 !important; 
+}
 [data-theme="dark"] .screen { background-color: #111827 !important; }
 
 /* ── Dark: white backgrounds → dark card ── */
@@ -258,3 +274,14 @@ html, body {
 
 /* ── Body bg transitions ── */
 body, #root, .screen { transition: background-color 0.25s ease; }
+
+/* ── Hide Number Spinners ── */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}

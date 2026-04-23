@@ -1,52 +1,49 @@
 import { useState } from 'react'
-import { Plus, BarChart3, IndianRupee, MapPin, Phone, User } from 'lucide-react'
+import { Plus, Search, MapPin, Phone, User, X, ArrowRight, Settings, Trash2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { formatINR } from '../utils/helpers'
 import { useLang } from '../App'
 
 export default function HomeScreen({ onNavigate }) {
   const { sites, addSite, getSiteTotal, getSitePaymentsTotal } = useStore()
-  const t = useLang()
   const [showAddModal, setShowAddModal] = useState(false)
   const [newSiteName, setNewSiteName] = useState('')
   const [newOwnerName, setNewOwnerName] = useState('')
   const [newOwnerPhone, setNewOwnerPhone] = useState('')
   const [newAddress, setNewAddress] = useState('')
+  const t = useLang()
+
+  const activeSites = sites.filter((s) => s.status === 'active')
+  const completedSites = sites.filter((s) => s.status === 'completed')
 
   const handleAddSite = () => {
     if (!newSiteName.trim()) return
-    const id = addSite(newSiteName, {
-      ownerName: newOwnerName.trim(),
-      ownerPhone: newOwnerPhone.trim(),
-      address: newAddress.trim(),
+    addSite({
+      name: newSiteName,
+      ownerName: newOwnerName,
+      ownerPhone: newOwnerPhone,
+      address: newAddress,
     })
+    setShowAddModal(false)
     setNewSiteName('')
     setNewOwnerName('')
     setNewOwnerPhone('')
     setNewAddress('')
-    setShowAddModal(false)
-    onNavigate('ledger', { siteId: id })
   }
 
-  // Separate active and completed sites
-  const activeSites = sites.filter(s => (s.status || 'active') === 'active')
-  const completedSites = sites.filter(s => s.status === 'completed')
-
   return (
-    <div className="screen bg-white">
+    <div className="screen bg-[#FAFAFA]">
       {/* Header */}
-      <div className="px-6 pt-14 pb-4">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
-            <img src="/logo.png" alt="Ashvin Construction" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <h1 className="text-[22px] font-bold font-display text-[#2B1D1C] leading-tight">
-              Ashvin Construction
-            </h1>
-            <p className="text-[12px] text-[#A0A0A0] font-medium tracking-wider uppercase">
-              Vadodara
-            </p>
+      <div className="px-5 pt-14 pb-5 bg-white border-b border-gray-50 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-[#FFF8DC] flex items-center justify-center flex-shrink-0 card-shadow">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain p-1.5" />
+            </div>
+            <div>
+              <h1 className="text-[22px] font-bold font-display text-[#2B1D1C] leading-tight">Ashvin Construction</h1>
+              <p className="text-[11px] font-bold text-[#A0A0A0] uppercase tracking-widest mt-0.5">VADODARA</p>
+            </div>
           </div>
         </div>
       </div>
@@ -139,47 +136,61 @@ export default function HomeScreen({ onNavigate }) {
 /* ── Active Site Card — full featured with action buttons ──────────────────── */
 function ActiveSiteCard({ site, total, onNavigate, t }) {
   return (
-    <div className="w-full text-left rounded-3xl card-shadow card-stripe p-5">
+    <div 
+      id={`site-card-${site.id}`}
+      onClick={() => onNavigate('ledger', { siteId: site.id })}
+      className="w-full text-left rounded-3xl card-shadow card-stripe p-5 active:scale-[0.98] transition-transform cursor-pointer"
+    >
       {/* Top row: name + total */}
-      <button
-        id={`site-card-${site.id}`}
-        onClick={() => onNavigate('ledger', { siteId: site.id })}
-        className="w-full text-left flex items-center justify-between active:scale-[0.98] transition-transform"
-      >
+      <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <h2 className="text-[18px] font-bold font-display text-[#2B1D1C] truncate">{site.name}</h2>
-          {site.ownerName && (
-            <p className="text-[12px] text-[#D4A800] mt-0.5 flex items-center gap-1">
-              <User size={11} /> {site.ownerName}
-            </p>
-          )}
           <p className="text-[12px] text-[#A0A0A0] mt-0.5">
             {new Date(site.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-            {site.address ? ` · ${site.address}` : ''}
           </p>
         </div>
         <div className="text-right ml-4 flex-shrink-0">
-          <p className="text-[22px] font-bold font-display text-[#2B1D1C]">{formatINR(total)}</p>
-          <p className="text-[12px] text-[#A0A0A0]">{t.totalSpent || 'Total Spent'}</p>
+          <p className="text-[20px] font-bold font-display text-[#2B1D1C]">{formatINR(total)}</p>
+          <p className="text-[11px] font-bold text-[#A0A0A0] uppercase tracking-wider">Total Spent</p>
         </div>
-      </button>
+      </div>
 
-      {/* Action Buttons Row */}
-      <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+      {/* Details info */}
+      <div className="mt-4 pt-4 border-t border-gray-50 space-y-2">
+        {site.ownerName && (
+          <div className="flex items-center gap-2 text-[#666]">
+            <User size={14} className="text-[#A0A0A0]" />
+            <span className="text-[13px] font-medium">{site.ownerName}</span>
+          </div>
+        )}
+        {site.ownerPhone && (
+          <a 
+            href={`tel:${site.ownerPhone}`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2 text-[#666] active:text-[#FED447] w-fit"
+          >
+            <Phone size={14} className="text-[#A0A0A0]" />
+            <span className="text-[13px] font-medium underline decoration-gray-200 underline-offset-4">{site.ownerPhone}</span>
+          </a>
+        )}
+      </div>
+
+      {/* Action shortcuts */}
+      <div className="mt-5 grid grid-cols-2 gap-3">
         <button
-          id={`payment-log-${site.id}`}
-          onClick={() => onNavigate('paymentLog', { siteId: site.id })}
-          className="flex-1 h-[38px] bg-[#FFF8DC] text-[#D4A800] text-[12px] font-bold rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+          id={`add-payment-site-${site.id}`}
+          onClick={(e) => { e.stopPropagation(); onNavigate('paymentLog', { siteId: site.id }) }}
+          className="h-[44px] bg-[#DCF7E3] text-[#2E7D32] font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
-          <IndianRupee size={14} strokeWidth={2.5} />
-          {t.addPayment || 'Add Payment'}
+          <Plus size={16} strokeWidth={2.5} />
+          {t.addPayment}
         </button>
         <button
           id={`site-summary-${site.id}`}
-          onClick={() => onNavigate('siteSummary', { siteId: site.id })}
-          className="flex-1 h-[38px] bg-[#F5F5F5] text-[#A0A0A0] text-[12px] font-bold rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+          onClick={(e) => { e.stopPropagation(); onNavigate('siteSummary', { siteId: site.id }) }}
+          className="h-[44px] bg-white border border-[#FED447] text-[#D4A800] font-bold text-[13px] rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
-          <BarChart3 size={14} strokeWidth={2.5} />
+          <ArrowRight size={16} />
           {t.summary}
         </button>
       </div>
@@ -187,15 +198,12 @@ function ActiveSiteCard({ site, total, onNavigate, t }) {
   )
 }
 
-/* ── Completed Site Card — muted, compact, with green accent ───────────────── */
 function CompletedSiteCard({ site, total, paymentsTotal, onNavigate }) {
   const balance = total - paymentsTotal
-
   return (
-    <button
-      id={`site-card-${site.id}`}
+    <div
       onClick={() => onNavigate('ledger', { siteId: site.id })}
-      className="completed-card w-full text-left rounded-2xl p-4 flex items-center justify-between active:scale-[0.98] transition-transform"
+      className="w-full flex items-center justify-between rounded-3xl bg-[#F5F5F5] p-5 active:scale-[0.98] transition-transform text-left cursor-pointer"
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -204,10 +212,25 @@ function CompletedSiteCard({ site, total, paymentsTotal, onNavigate }) {
             ✓ Done
           </span>
         </div>
-        {site.ownerName && (
-          <p className="text-[11px] text-[#A0A0A0] mt-0.5">{site.ownerName}</p>
-        )}
-        <p className="text-[12px] text-[#A0A0A0] mt-0.5">
+        <div className="mt-1 space-y-0.5">
+          {site.ownerName && (
+            <p className="text-[11px] text-[#A0A0A0] flex items-center gap-1">
+              <User size={10} className="text-[#A0A0A0]" />
+              {site.ownerName}
+            </p>
+          )}
+          {site.ownerPhone && (
+            <a 
+              href={`tel:${site.ownerPhone}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-[11px] text-[#A0A0A0] flex items-center gap-1 active:text-[#FED447] w-fit"
+            >
+              <Phone size={10} className="text-[#A0A0A0]" />
+              <span className="underline decoration-gray-200 underline-offset-2">{site.ownerPhone}</span>
+            </a>
+          )}
+        </div>
+        <p className="text-[11px] text-[#A0A0A0] mt-1 italic">
           {site.completedAt
             ? `Completed ${new Date(site.completedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`
             : new Date(site.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -223,7 +246,7 @@ function CompletedSiteCard({ site, total, paymentsTotal, onNavigate }) {
           <p className="text-[11px] font-semibold text-green-600">Settled</p>
         )}
       </div>
-    </button>
+    </div>
   )
 }
 
@@ -249,30 +272,34 @@ function EmptyState({ onAdd, t }) {
   )
 }
 
-function AddSiteModal({ siteName, ownerName, ownerPhone, address, onSiteNameChange, onOwnerNameChange, onOwnerPhoneChange, onAddressChange, onSubmit, onClose, t }) {
+function AddSiteModal({
+  siteName, ownerName, ownerPhone, address,
+  onSiteNameChange, onOwnerNameChange, onOwnerPhoneChange, onAddressChange,
+  onSubmit, onClose, t
+}) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end z-50" onClick={onClose}>
-      <div
-        className="w-full bg-white rounded-t-3xl p-6 pb-10 max-h-[85vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-6" />
-        <h2 className="text-[20px] font-bold font-display text-[#2B1D1C] mb-5">{t.newSiteTitle || 'New Construction Site'}</h2>
+    <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white w-full rounded-[32px] p-6 pb-8 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-[22px] font-bold font-display text-[#2B1D1C]">{t.newSiteTitle || 'New Construction Site'}</h2>
+          <button onClick={onClose} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+            <X size={18} color="#A0A0A0" />
+          </button>
+        </div>
 
-        {/* Site Name — required */}
+        {/* Site Name */}
         <div className="mb-4">
           <label className="text-[12px] font-semibold text-[#A0A0A0] tracking-wider uppercase block mb-2">
-            {t.siteName} *
+            {t.siteName || 'Site Name'}
           </label>
           <input
-            id="site-name-input"
             type="text"
             autoFocus
+            autoCapitalize="words"
             value={siteName}
             onChange={(e) => onSiteNameChange(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
-            placeholder={t.sitePlaceholder || 'e.g. Shyamal Villa, Gorwa Road...'}
-            className="w-full h-[52px] bg-[#F5F5F5] rounded-2xl px-5 text-[17px] text-[#2B1D1C] placeholder-[#A0A0A0] outline-none focus:ring-2 focus:ring-[#FED447]"
+            placeholder={t.sitePlaceholder || 'e.g. Rajnagar Project'}
+            className="w-full h-[48px] bg-[#F5F5F5] rounded-2xl px-5 text-[15px] text-[#2B1D1C] placeholder-[#A0A0A0] outline-none focus:ring-2 focus:ring-[#FED447]"
           />
         </div>
 
@@ -283,6 +310,7 @@ function AddSiteModal({ siteName, ownerName, ownerPhone, address, onSiteNameChan
           </label>
           <input
             type="text"
+            autoCapitalize="words"
             value={ownerName}
             onChange={(e) => onOwnerNameChange(e.target.value)}
             placeholder={t.ownerNamePlaceholder || 'e.g. Mr. Rajesh Patel'}
@@ -297,9 +325,9 @@ function AddSiteModal({ siteName, ownerName, ownerPhone, address, onSiteNameChan
           </label>
           <input
             type="tel"
-            inputMode="numeric"
+            inputMode="tel"
             value={ownerPhone}
-            onChange={(e) => onOwnerPhoneChange(e.target.value)}
+            onChange={(e) => onOwnerPhoneChange(e.target.value.replace(/[^0-9+\- ]/g, ''))}
             placeholder={t.ownerPhonePlaceholder || 'e.g. 9876543210'}
             className="w-full h-[48px] bg-[#F5F5F5] rounded-2xl px-5 text-[15px] text-[#2B1D1C] placeholder-[#A0A0A0] outline-none focus:ring-2 focus:ring-[#FED447]"
           />

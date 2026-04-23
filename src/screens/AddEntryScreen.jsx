@@ -11,6 +11,11 @@ const LABOR_LABEL_KEY = {
   'Welder': 'welder', 'Salaat': 'salaat', 'Helper': 'helper',
   'Karigar + Helper': 'karigarHelper', 'Others': 'others',
 }
+const MATERIAL_LABEL_KEY = {
+  'Cement': 'cement', 'Steel': 'steel', 'Sand': 'sand', 'Bricks': 'bricks',
+  'Paint': 'paint', 'Wood': 'wood', 'Tiles': 'tiles', 'Pipes': 'pipes',
+  'Gravel': 'gravel', 'Other': 'other'
+}
 const MISC_LABEL_KEY = {
   'Food': 'food', 'Rent': 'rent', 'Transport': 'transport',
   'Tools': 'tools', 'Others': 'others',
@@ -98,105 +103,46 @@ export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
   const [miscCategory, setMiscCategory] = useState(entryToEdit?.type === 'misc' ? entryToEdit.category : 'Food')
 
   // Shared
-  const [amount, setAmount] = useState(entryToEdit ? String(entryToEdit.amount) : '')
+  const [amount, setAmount] = useState(entryToEdit?.amount ? String(entryToEdit.amount) : '')
   const [date, setDate] = useState(entryToEdit?.date || todayISO())
   const [note, setNote] = useState(entryToEdit?.note || '')
 
   if (!site) { onNavigate('home'); return null }
 
-  // ── Derived: final category name ───────────────────────
-  const materialName = matPreset.label === 'Other'
-    ? (customMatName.trim() || 'Other')
-    : matPreset.label
-
-  // ── Auto-calculate amount when qty × unitPrice changes ─
-  const computedTotal =
-    !useDirect && qty && unitPrice
-      ? (parseFloat(qty) || 0) * (parseFloat(unitPrice) || 0)
-      : null
-
-  // keep amount field synced with computed total
-  useEffect(() => {
-    if (computedTotal !== null) {
-      setAmount(computedTotal > 0 ? String(computedTotal) : '')
-    }
-  }, [computedTotal])
-
-  // Reset qty/unitPrice when switching presets
   const handleSelectPreset = (preset) => {
     setMatPreset(preset)
-    setQty('')
-    setUnitPrice('')
-    setAmount('')
-    setNote('')
-    setUseDirect(false)  // always default to Qty×Price when switching material
-    if (preset.label === 'Other') {
-      setShowCustomInput(true)
-    } else {
-      setShowCustomInput(false)
-      setCustomMatName('')
-    }
+    setShowCustomInput(preset.label === 'Other')
+    if (preset.label !== 'Other') setCustomMatName('')
   }
 
-  // Reset amount when labor category changes
-  const handleSelectLabor = (chip) => {
-    setLaborCategory(chip)
-    setAmount('')
-    setNote('')
-  }
-
-  // Reset amount when misc category changes
-  const handleSelectMisc = (cat) => {
-    setMiscCategory(cat)
-    setAmount('')
-    setNote('')
-  }
-
-  // ── Build the qty detail string for saving ─────────────
-  const getQtyDetail = () => {
-    if (activeTab !== 'Material') return ''
-    if (useDirect || matPreset.mode === 'direct') return ''
-    if (qty && unitPrice) return `${qty} ${matPreset.unitLabel} × ₹${parseFloat(unitPrice).toLocaleString('en-IN')}`
-    return ''
-  }
-
-  // ── Selected category for non-material tabs ────────────
-  const selectedCategory =
-    activeTab === 'Labor' ? laborCategory :
-    activeTab === 'Material' ? materialName : miscCategory
-
-  const type =
-    activeTab === 'Labor' ? 'labor' :
-    activeTab === 'Material' ? 'material' : 'misc'
-
-  const finalAmount = parseFloat(amount) || 0
-  const canSave = finalAmount > 0
+  const handleSelectMisc = (cat) => setMiscCategory(cat)
 
   const handleSave = () => {
-    if (!canSave) return
-    const qtyDetail = getQtyDetail()
-    const entryData = {
+    const finalAmount = activeTab === 'Material' && !useDirect
+      ? (parseFloat(qty) || 0) * (parseFloat(unitPrice) || 0)
+      : parseFloat(amount)
+
+    if (!finalAmount || finalAmount <= 0) return
+
+    const data = {
       siteId,
-      type,
-      category: selectedCategory,
-      description: qtyDetail || selectedCategory,
-      amount,
+      type: activeTab.toLowerCase(),
+      category: activeTab === 'Labor' ? laborCategory 
+                : activeTab === 'Material' ? (showCustomInput ? customMatName : matPreset.label)
+                : miscCategory,
+      amount: finalAmount,
       date,
       note,
-      qty: qty ? parseFloat(qty) : undefined,
-      unitPrice: unitPrice ? parseFloat(unitPrice) : undefined,
-      unitLabel: matPreset.unitLabel,
-      qtyDetail,
+      ...(activeTab === 'Material' && !useDirect ? { qty: parseFloat(qty), unitPrice: parseFloat(unitPrice) } : {})
     }
-    if (isEditing) {
-      updateEntry(entryToEdit.id, entryData)
-    } else {
-      addEntry(entryData)
-    }
+
+    if (isEditing) updateEntry(entryToEdit.id, data)
+    else addEntry(data)
+    
     onNavigate('ledger', { siteId })
   }
 
-  // ── Determine if we show qty fields ────────────────────
+  const computedTotal = (parseFloat(qty) || 0) * (parseFloat(unitPrice) || 0)
   const showQtyFields = activeTab === 'Material' && !useDirect
 
   return (
@@ -211,8 +157,9 @@ export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
             <ArrowLeft size={20} color="#2B1D1C" />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-[19px] font-bold font-display text-[#2B1D1C] leading-tight">{isEditing ? 'Edit Entry' : 'Add Entry'}</h1>
-            {/* fading site name */}
+            <h1 className="text-[19px] font-bold font-display text-[#2B1D1C] leading-tight">
+              {isEditing ? (t.editEntry || 'Edit Expense') : (t.addEntry || 'Add Expense')}
+            </h1>
             <p
               className="text-[12px] font-medium tracking-wide truncate"
               style={{
@@ -227,7 +174,7 @@ export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
           </div>
           {/* Active tab badge */}
           <span className="flex-shrink-0 bg-[#FED447] text-[#2B1D1C] text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-            {activeTab}
+            {TAB_LABELS[activeTab] || activeTab}
           </span>
         </div>
 
@@ -248,8 +195,8 @@ export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
       </div>
 
       {/* Form Body */}
-      <div className="screen-body px-5">
-        <div className="mt-5 space-y-5">
+      <div className="screen-body px-5 pt-4">
+        <div className="space-y-6 pb-10">
 
           {/* ── LABOR ── */}
           {activeTab === 'Labor' && (
@@ -259,8 +206,8 @@ export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
                 {LABOR_CHIPS.map(({ label, icon }) => (
                   <button
                     key={label}
-                    id={`labor-chip-${label.replace(/\s+/g, '-').toLowerCase()}`}
-                    onClick={() => handleSelectLabor(label)}
+                    id={`labor-chip-${label.toLowerCase()}`}
+                    onClick={() => setLaborCategory(label)}
                     className={`h-[64px] rounded-2xl flex flex-col items-center justify-center gap-1 text-[12px] font-semibold transition-all
                       ${laborCategory === label ? 'bg-[#FED447] text-[#2B1D1C]' : 'bg-[#F5F5F5] text-[#A0A0A0]'}`}
                   >
@@ -275,7 +222,6 @@ export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
           {/* ── MATERIAL ── */}
           {activeTab === 'Material' && (
             <>
-              {/* Material Chips grid */}
               <div>
                 <Label>{t.materialType}</Label>
                 <div className="grid grid-cols-3 gap-2 mt-2">
@@ -288,29 +234,28 @@ export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
                         ${matPreset.label === preset.label ? 'bg-[#FED447] text-[#2B1D1C]' : 'bg-[#F5F5F5] text-[#A0A0A0]'}`}
                     >
                       <span className="text-[20px]">{preset.icon}</span>
-                      {preset.label}
+                      {t[MATERIAL_LABEL_KEY[preset.label]] || preset.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Custom material name input (when "Other" is selected) */}
               {showCustomInput && (
                 <div>
-                  <Label>Material Name *</Label>
+                  <Label>{t.materialName}</Label>
                   <input
                     id="custom-mat-input"
                     type="text"
                     autoFocus
+                    autoCapitalize="words"
                     value={customMatName}
                     onChange={(e) => setCustomMatName(e.target.value)}
-                    placeholder="e.g. Waterproofing compound, AAC blocks..."
+                    placeholder={t.customMatPlaceholder}
                     className="w-full h-[52px] bg-[#F5F5F5] rounded-2xl px-5 text-[16px] text-[#2B1D1C] placeholder-[#A0A0A0] outline-none focus:ring-2 focus:ring-[#FED447] mt-2"
                   />
                 </div>
               )}
 
-              {/* ── Input Mode Toggle — shown for ALL materials ── */}
               <div className="flex gap-2">
                 <button
                   id="toggle-qty-mode"
@@ -318,65 +263,47 @@ export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
                   className={`flex-1 h-[44px] rounded-2xl text-[14px] font-semibold transition-all
                     ${!useDirect ? 'bg-[#2B1D1C] text-[#FED447]' : 'bg-[#F5F5F5] text-[#A0A0A0]'}`}
                 >
-                  🧮 Qty × Price
+                  {t.qtyPrice}
                 </button>
                 <button
                   id="toggle-direct-mode"
-                  onClick={() => { setUseDirect(true); setQty(''); setUnitPrice(''); setAmount('') }}
+                  onClick={() => { setUseDirect(true); setQty(''); setUnitPrice('') }}
                   className={`flex-1 h-[44px] rounded-2xl text-[14px] font-semibold transition-all
                     ${useDirect ? 'bg-[#2B1D1C] text-[#FED447]' : 'bg-[#F5F5F5] text-[#A0A0A0]'}`}
                 >
-                  ₹ Direct Amount
+                  {t.directAmount}
                 </button>
               </div>
 
-              {/* ── Smart Qty × Unit Price fields ── */}
-              {showQtyFields && (
-                <div className="bg-[#F8F8F8] rounded-3xl p-4 space-y-3">
-                  <p className="text-[11px] font-bold text-[#A0A0A0] tracking-wider uppercase">
-                    {matPreset.label} Calculation
-                  </p>
-
-                  {/* Qty */}
+              {!useDirect && (
+                <div className="grid grid-cols-2 gap-3 bg-[#F5F5F5] rounded-3xl p-4">
                   <div>
                     <Label>{matPreset.qtyLabel}</Label>
                     <input
                       id="qty-input"
-                      type="number"
+                      type="text"
                       inputMode="decimal"
                       value={qty}
-                      onChange={(e) => setQty(e.target.value)}
+                      onChange={(e) => setQty(e.target.value.replace(/[^0-9.]/g, ''))}
                       placeholder="0"
-                      className="w-full h-[52px] bg-white rounded-2xl px-5 text-[20px] font-bold text-[#2B1D1C] placeholder-[#D0D0D0] outline-none focus:ring-2 focus:ring-[#FED447] mt-1"
+                      className="w-full h-[52px] bg-white rounded-2xl px-5 text-[18px] font-bold text-[#2B1D1C] outline-none mt-2"
                     />
                   </div>
-
-                  {/* Unit Price */}
                   <div>
                     <Label>{matPreset.priceLabel}</Label>
-                    <div className="relative mt-1">
-                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[18px] font-bold text-[#A0A0A0]">₹</span>
-                      <input
-                        id="unit-price-input"
-                        type="number"
-                        inputMode="decimal"
-                        value={unitPrice}
-                        onChange={(e) => setUnitPrice(e.target.value)}
-                        placeholder="0"
-                        className="w-full h-[52px] bg-white rounded-2xl pl-10 pr-5 text-[20px] font-bold text-[#2B1D1C] placeholder-[#D0D0D0] outline-none focus:ring-2 focus:ring-[#FED447]"
-                      />
-                    </div>
+                    <input
+                      id="price-input"
+                      type="text"
+                      inputMode="decimal"
+                      value={unitPrice}
+                      onChange={(e) => setUnitPrice(e.target.value.replace(/[^0-9.]/g, ''))}
+                      placeholder="0"
+                      className="w-full h-[52px] bg-white rounded-2xl px-5 text-[18px] font-bold text-[#2B1D1C] outline-none mt-2"
+                    />
                   </div>
-
-                  {/* Total display */}
-                  <div className="bg-[#FED447] rounded-2xl px-5 py-3 flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] font-bold text-[#2B1D1C]/60 uppercase tracking-wider">Total</p>
-                      {qty && unitPrice && (
-                        <p className="text-[12px] text-[#2B1D1C]/70">
-                          {qty} {matPreset.unitLabel} × ₹{parseFloat(unitPrice || 0).toLocaleString('en-IN')}
-                        </p>
-                      )}
+                  <div className="col-span-2 pt-2 mt-2 border-t border-gray-200/50 flex justify-between items-center">
+                    <div className="text-[11px] font-bold text-[#A0A0A0] uppercase tracking-wider">
+                      {t.totalSpent}
                     </div>
                     <p className="text-[26px] font-bold font-display text-[#2B1D1C]">
                       {computedTotal !== null && computedTotal > 0
@@ -411,65 +338,88 @@ export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
           )}
 
 
-          {/* ── Amount field: only show for non-qty-material ── */}
-          {!(activeTab === 'Material' && showQtyFields) && (
+          {/* ── Amount field ── */}
+          {!(activeTab === 'Material' && !useDirect) && (
             <div>
-              <Label>Amount (₹) *</Label>
+              <Label>{t.amount}</Label>
               <div className="relative mt-2">
                 <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[22px] font-bold text-[#A0A0A0]">₹</span>
                 <input
                   id="amount-input"
-                  type="number"
+                  type="text"
                   inputMode="decimal"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
                   placeholder="0"
                   className="w-full h-[64px] bg-[#FFF8DC] rounded-2xl pl-10 pr-5 text-[28px] font-bold font-display text-[#2B1D1C] placeholder-[#D4C080] outline-none focus:ring-2 focus:ring-[#FED447]"
                 />
               </div>
+
+              {activeTab === 'Labor' && (
+                <div className="grid grid-cols-4 gap-2 mt-3">
+                  {[500, 600, 800, 1000, 1200, 1400, 1500, 2000].map((amt) => (
+                    <button
+                      key={amt}
+                      onClick={() => setAmount(amt.toString())}
+                      className={`h-[44px] rounded-xl text-[14px] font-bold transition-all border flex items-center justify-center
+                        ${amount === amt.toString() 
+                          ? 'bg-[#FED447] border-[#FED447] text-[#2B1D1C]' 
+                          : 'bg-white border-gray-100 text-[#A0A0A0] active:bg-gray-50'
+                        }`}
+                    >
+                      ₹{amt}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Date */}
-          <div>
-            <Label>{t.date}</Label>
-            <input
-              id="date-input"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full h-[52px] bg-[#F5F5F5] rounded-2xl px-5 text-[16px] text-[#2B1D1C] outline-none focus:ring-2 focus:ring-[#FED447] mt-2"
-            />
+          {/* ── Date & Note ── */}
+          <div className="grid grid-cols-1 gap-5">
+            <div>
+              <Label>{t.date}</Label>
+              <input
+                id="entry-date-input"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full h-[52px] bg-[#F5F5F5] rounded-2xl px-5 text-[16px] text-[#2B1D1C] outline-none focus:ring-2 focus:ring-[#FED447] mt-2"
+              />
+            </div>
+            <div>
+              <Label>{t.note}</Label>
+              <textarea
+                id="entry-note-input"
+                value={note}
+                autoCapitalize="sentences"
+                onChange={(e) => setNote(e.target.value)}
+                placeholder={t.notePlaceholder}
+                rows={3}
+                className="w-full bg-[#F5F5F5] rounded-3xl px-5 py-4 text-[16px] text-[#2B1D1C] placeholder-[#A0A0A0] outline-none focus:ring-2 focus:ring-[#FED447] resize-none mt-2"
+              />
+            </div>
           </div>
 
-          {/* Note */}
-          <div>
-            <Label>{t.note}</Label>
-            <textarea
-              id="note-input"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Supplier name, brand, grade, or any details..."
-              rows={2}
-              className="w-full bg-[#F5F5F5] rounded-2xl px-5 py-4 text-[16px] text-[#2B1D1C] placeholder-[#A0A0A0] outline-none focus:ring-2 focus:ring-[#FED447] resize-none mt-2"
-            />
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={() => onNavigate('ledger', { siteId })}
+              className="flex-1 h-[56px] text-[#A0A0A0] font-bold text-[16px]"
+            >
+              {t.cancel}
+            </button>
+            <button
+              id="save-entry-btn"
+              onClick={handleSave}
+              className="flex-[2] h-[56px] bg-[#FED447] text-[#2B1D1C] font-bold text-[17px] rounded-full shadow-lg active:scale-[0.98] transition-transform btn-press"
+            >
+              <span className="flex items-center justify-center gap-2">
+                <Plus size={20} strokeWidth={2.5} />
+                {isEditing ? t.save : (t.save)}
+              </span>
+            </button>
           </div>
-
-          {/* Save */}
-          <button
-            id="save-entry-btn"
-            onClick={handleSave}
-            disabled={!canSave}
-            className="w-full h-[56px] bg-[#FED447] text-[#2B1D1C] font-bold text-[17px] rounded-full disabled:opacity-40 mt-2"
-          >
-            {isEditing ? (t.update || 'Update') : t.save} {activeTab === 'Material' ? materialName : (TAB_LABELS[activeTab] || activeTab)}
-          </button>
-          <button
-            onClick={() => onNavigate('ledger', { siteId })}
-            className="w-full h-[44px] text-[#A0A0A0] text-[15px] mb-6"
-          >
-            {t.cancel}
-          </button>
         </div>
       </div>
     </div>
@@ -478,6 +428,8 @@ export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
 
 function Label({ children }) {
   return (
-    <p className="text-[12px] font-semibold text-[#A0A0A0] tracking-wider uppercase">{children}</p>
+    <label className="text-[12px] font-bold text-[#A0A0A0] tracking-wider uppercase px-1">
+      {children}
+    </label>
   )
 }

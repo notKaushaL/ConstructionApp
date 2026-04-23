@@ -115,11 +115,20 @@ export default function LedgerScreen({ siteId, onNavigate }) {
                   </span>
                 </div>
                 {(site.ownerName || site.ownerPhone) ? (
-                  <p className="text-[11px] text-[#A0A0A0] truncate mt-0.5">
-                    {site.ownerName && <span className="inline-flex items-center gap-0.5"><User size={9} className="inline" /> {site.ownerName}</span>}
-                    {site.ownerName && site.ownerPhone && <span className="mx-1.5">·</span>}
-                    {site.ownerPhone && <span className="inline-flex items-center gap-0.5"><Phone size={9} className="inline" /> {site.ownerPhone}</span>}
-                  </p>
+                  <div className="mt-1 space-y-0.5">
+                    {site.ownerName && (
+                      <p className="text-[11px] font-medium text-[#A0A0A0] flex items-center gap-1 leading-tight truncate">
+                        <User size={10} className="flex-shrink-0" />
+                        {site.ownerName}
+                      </p>
+                    )}
+                    {site.ownerPhone && (
+                      <p className="text-[11px] font-medium text-[#A0A0A0] flex items-center gap-1 leading-tight truncate">
+                        <Phone size={10} className="flex-shrink-0" />
+                        {site.ownerPhone}
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-[12px] text-[#A0A0A0]">{t.dailyLedger}</p>
                 )}
@@ -298,6 +307,7 @@ export default function LedgerScreen({ siteId, onNavigate }) {
               <input
                 type="text"
                 autoFocus
+                autoCapitalize="words"
                 value={editOwner}
                 onChange={(e) => setEditOwner(e.target.value)}
                 placeholder={t.ownerNamePlaceholder || 'e.g. Mr. Rajesh Patel'}
@@ -310,9 +320,9 @@ export default function LedgerScreen({ siteId, onNavigate }) {
               </label>
               <input
                 type="tel"
-                inputMode="numeric"
+                inputMode="tel"
                 value={editPhone}
-                onChange={(e) => setEditPhone(e.target.value)}
+                onChange={(e) => setEditPhone(e.target.value.replace(/[^0-9+\- ]/g, ''))}
                 placeholder={t.ownerPhonePlaceholder || 'e.g. 9876543210'}
                 className="w-full h-[48px] bg-[#F5F5F5] rounded-2xl px-5 text-[15px] text-[#2B1D1C] placeholder-[#A0A0A0] outline-none focus:ring-2 focus:ring-[#FED447]"
               />
@@ -426,7 +436,8 @@ function EmptyLedger({ onAdd, isCompleted, t }) {
         }
       </p>
       {onAdd && (
-        <button onClick={onAdd} className="bg-[#FED447] text-[#2B1D1C] font-bold text-[16px] px-8 h-[52px] rounded-full">
+        <button onClick={onAdd} className="bg-[#FED447] text-[#2B1D1C] font-bold text-[16px] px-8 h-[52px] rounded-full flex items-center justify-center gap-2">
+          <Plus size={20} strokeWidth={2.5} />
           {t.addFirstEntry}
         </button>
       )}
