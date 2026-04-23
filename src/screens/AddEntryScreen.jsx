@@ -2,6 +2,19 @@ import { useState, useEffect } from 'react'
 import { ArrowLeft, Plus } from 'lucide-react'
 import useStore from '../store/useStore'
 import { todayISO } from '../utils/helpers'
+import { useLang } from '../App'
+
+// ─── Translation maps for display (keys stay English for data) ─────
+const LABOR_LABEL_KEY = {
+  'Majur': 'majur', 'Karigar': 'karigar', 'Mason': 'mason', 'Plumber': 'plumber',
+  'Electrician': 'electrician', 'Carpenter': 'carpenter', 'Painter': 'painter',
+  'Welder': 'welder', 'Salaat': 'salaat', 'Helper': 'helper',
+  'Karigar + Helper': 'karigarHelper', 'Others': 'others',
+}
+const MISC_LABEL_KEY = {
+  'Food': 'food', 'Rent': 'rent', 'Transport': 'transport',
+  'Tools': 'tools', 'Others': 'others',
+}
 
 // ─── Labor categories ──────────────────────────────────────────────
 const LABOR_CHIPS = [
@@ -44,30 +57,50 @@ const MISC_CATEGORIES = [
 
 const TABS = ['Labor', 'Material', 'Misc']
 
-export default function AddEntryScreen({ siteId, onNavigate }) {
-  const { sites, addEntry } = useStore()
+export default function AddEntryScreen({ siteId, entryToEdit, onNavigate }) {
+  const { sites, addEntry, updateEntry } = useStore()
   const site = sites.find((s) => s.id === siteId)
+  const isEditing = !!entryToEdit
+  const t = useLang()
+  const TAB_LABELS = { 'Labor': t.labor, 'Material': t.material, 'Misc': t.misc }
 
-  const [activeTab, setActiveTab] = useState('Labor')
+  const [activeTab, setActiveTab] = useState(() => {
+    if (entryToEdit) {
+      if (entryToEdit.type === 'labor') return 'Labor'
+      if (entryToEdit.type === 'material') return 'Material'
+      return 'Misc'
+    }
+    return 'Labor'
+  })
 
   // Labor
-  const [laborCategory, setLaborCategory] = useState('Majur')
+  const [laborCategory, setLaborCategory] = useState(entryToEdit?.type === 'labor' ? entryToEdit.category : 'Majur')
 
   // Material
-  const [matPreset, setMatPreset]           = useState(MATERIAL_PRESETS[0])
-  const [customMatName, setCustomMatName]   = useState('')
-  const [showCustomInput, setShowCustomInput] = useState(false)
-  const [qty, setQty]                       = useState('')
-  const [unitPrice, setUnitPrice]           = useState('')
-  const [useDirect, setUseDirect]           = useState(false)   // toggle for 'both' mode
+  const [matPreset, setMatPreset] = useState(() => {
+    if (entryToEdit?.type === 'material') {
+      return MATERIAL_PRESETS.find(p => p.label === entryToEdit.category) || MATERIAL_PRESETS[9]
+    }
+    return MATERIAL_PRESETS[0]
+  })
+  const [customMatName, setCustomMatName] = useState(
+    entryToEdit?.type === 'material' && !MATERIAL_PRESETS.find(p => p.label === entryToEdit.category)
+      ? entryToEdit.category : ''
+  )
+  const [showCustomInput, setShowCustomInput] = useState(
+    entryToEdit?.type === 'material' && !MATERIAL_PRESETS.find(p => p.label === entryToEdit.category)
+  )
+  const [qty, setQty] = useState(entryToEdit?.qty ? String(entryToEdit.qty) : '')
+  const [unitPrice, setUnitPrice] = useState(entryToEdit?.unitPrice ? String(entryToEdit.unitPrice) : '')
+  const [useDirect, setUseDirect] = useState(entryToEdit?.type === 'material' && !entryToEdit?.qty)
 
   // Misc
-  const [miscCategory, setMiscCategory] = useState('Food')
+  const [miscCategory, setMiscCategory] = useState(entryToEdit?.type === 'misc' ? entryToEdit.category : 'Food')
 
   // Shared
-  const [amount, setAmount]           = useState('')
-  const [date, setDate]               = useState(todayISO())
-  const [note, setNote]               = useState('')
+  const [amount, setAmount] = useState(entryToEdit ? String(entryToEdit.amount) : '')
+  const [date, setDate] = useState(entryToEdit?.date || todayISO())
+  const [note, setNote] = useState(entryToEdit?.note || '')
 
   if (!site) { onNavigate('home'); return null }
 
@@ -142,7 +175,7 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
   const handleSave = () => {
     if (!canSave) return
     const qtyDetail = getQtyDetail()
-    addEntry({
+    const entryData = {
       siteId,
       type,
       category: selectedCategory,
@@ -150,12 +183,16 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
       amount,
       date,
       note,
-      // extra meta for ledger display
       qty: qty ? parseFloat(qty) : undefined,
       unitPrice: unitPrice ? parseFloat(unitPrice) : undefined,
       unitLabel: matPreset.unitLabel,
       qtyDetail,
-    })
+    }
+    if (isEditing) {
+      updateEntry(entryToEdit.id, entryData)
+    } else {
+      addEntry(entryData)
+    }
     onNavigate('ledger', { siteId })
   }
 
@@ -174,7 +211,7 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
             <ArrowLeft size={20} color="#2B1D1C" />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-[19px] font-bold font-display text-[#2B1D1C] leading-tight">Add Entry</h1>
+            <h1 className="text-[19px] font-bold font-display text-[#2B1D1C] leading-tight">{isEditing ? 'Edit Entry' : 'Add Entry'}</h1>
             {/* fading site name */}
             <p
               className="text-[12px] font-medium tracking-wide truncate"
@@ -204,7 +241,7 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
               className={`flex-1 h-[40px] rounded-xl text-[14px] font-semibold transition-all
                 ${activeTab === tab ? 'bg-[#FED447] text-[#2B1D1C]' : 'text-[#A0A0A0]'}`}
             >
-              {tab}
+              {TAB_LABELS[tab] || tab}
             </button>
           ))}
         </div>
@@ -217,7 +254,7 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
           {/* ── LABOR ── */}
           {activeTab === 'Labor' && (
             <div>
-              <Label>Labor Type</Label>
+              <Label>{t.laborType}</Label>
               <div className="grid grid-cols-3 gap-2 mt-2">
                 {LABOR_CHIPS.map(({ label, icon }) => (
                   <button
@@ -228,7 +265,7 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
                       ${laborCategory === label ? 'bg-[#FED447] text-[#2B1D1C]' : 'bg-[#F5F5F5] text-[#A0A0A0]'}`}
                   >
                     <span className="text-[20px]">{icon}</span>
-                    {label}
+                    {t[LABOR_LABEL_KEY[label]] || label}
                   </button>
                 ))}
               </div>
@@ -240,7 +277,7 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
             <>
               {/* Material Chips grid */}
               <div>
-                <Label>Material Type</Label>
+                <Label>{t.materialType}</Label>
                 <div className="grid grid-cols-3 gap-2 mt-2">
                   {MATERIAL_PRESETS.map((preset) => (
                     <button
@@ -355,7 +392,7 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
           {/* ── MISC ── */}
           {activeTab === 'Misc' && (
             <div>
-              <Label>Category</Label>
+              <Label>{t.category}</Label>
               <div className="grid grid-cols-3 gap-2 mt-2">
                 {MISC_CATEGORIES.map(({ label, icon }) => (
                   <button
@@ -366,7 +403,7 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
                       ${miscCategory === label ? 'bg-[#FED447] text-[#2B1D1C]' : 'bg-[#F5F5F5] text-[#A0A0A0]'}`}
                   >
                     <span className="text-[22px]">{icon}</span>
-                    {label}
+                    {t[MISC_LABEL_KEY[label]] || label}
                   </button>
                 ))}
               </div>
@@ -395,7 +432,7 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
 
           {/* Date */}
           <div>
-            <Label>Date</Label>
+            <Label>{t.date}</Label>
             <input
               id="date-input"
               type="date"
@@ -407,7 +444,7 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
 
           {/* Note */}
           <div>
-            <Label>Note (Optional)</Label>
+            <Label>{t.note}</Label>
             <textarea
               id="note-input"
               value={note}
@@ -425,13 +462,13 @@ export default function AddEntryScreen({ siteId, onNavigate }) {
             disabled={!canSave}
             className="w-full h-[56px] bg-[#FED447] text-[#2B1D1C] font-bold text-[17px] rounded-full disabled:opacity-40 mt-2"
           >
-            Save {activeTab === 'Material' ? materialName : activeTab} Entry
+            {isEditing ? (t.update || 'Update') : t.save} {activeTab === 'Material' ? materialName : (TAB_LABELS[activeTab] || activeTab)}
           </button>
           <button
             onClick={() => onNavigate('ledger', { siteId })}
             className="w-full h-[44px] text-[#A0A0A0] text-[15px] mb-6"
           >
-            Cancel
+            {t.cancel}
           </button>
         </div>
       </div>

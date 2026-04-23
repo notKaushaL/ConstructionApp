@@ -4,6 +4,8 @@ import LedgerScreen from './screens/LedgerScreen'
 import AddEntryScreen from './screens/AddEntryScreen'
 import SummaryScreen from './screens/SummaryScreen'
 import SettingsScreen from './screens/SettingsScreen'
+import PaymentLogScreen from './screens/PaymentLogScreen'
+import SiteSummaryScreen from './screens/SiteSummaryScreen'
 import BottomNav from './components/BottomNav'
 import useStore from './store/useStore'
 import { TRANSLATIONS } from './i18n/translations'
@@ -40,9 +42,11 @@ export default function App() {
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           {screen === 'home' && <HomeScreen onNavigate={navigate} />}
           {screen === 'ledger' && params.siteId && <LedgerScreen siteId={params.siteId} onNavigate={navigate} />}
-          {screen === 'addEntry' && params.siteId && <AddEntryScreen siteId={params.siteId} onNavigate={navigate} />}
+          {screen === 'addEntry' && params.siteId && <AddEntryScreen siteId={params.siteId} entryToEdit={params.entryToEdit} onNavigate={navigate} />}
           {screen === 'summary' && <SummaryScreen onNavigate={navigate} />}
           {screen === 'settings' && <SettingsScreen onNavigate={navigate} />}
+          {screen === 'paymentLog' && params.siteId && <PaymentLogScreen siteId={params.siteId} onNavigate={navigate} />}
+          {screen === 'siteSummary' && params.siteId && <SiteSummaryScreen siteId={params.siteId} onNavigate={navigate} />}
         </div>
 
         {showNav && (

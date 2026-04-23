@@ -6,10 +6,13 @@ import { nanoid } from '../utils/nanoid'
  * ASHVIN CONSTRUCTION — ZUSTAND STORE
  *
  * Data Shape:
- * sites: [{ id, name, createdAt }]
+ * sites: [{ id, name, createdAt, status: 'active'|'completed', completedAt? }]
  * entries: [{
  *   id, siteId, type: 'labor'|'material'|'misc',
  *   category, description, amount, date, note, createdAt
+ * }]
+ * payments: [{
+ *   id, siteId, amount, method: 'bank'|'cash'|'upi', date, note, createdAt
  * }]
  */
 
@@ -19,6 +22,7 @@ const useStore = create(
       // ─── STATE ─────────────────────────────────────────────
       sites: [],
       entries: [],
+      payments: [],
       theme: 'light',        // 'light' | 'dark'
       language: 'en',        // 'en' | 'hi' | 'gu'
 
@@ -27,8 +31,16 @@ const useStore = create(
       setLanguage: (l) => set({ language: l }),
 
       // ─── SITE ACTIONS ───────────────────────────────────────
-      addSite: (name) => {
-        const site = { id: nanoid(), name: name.trim(), createdAt: new Date().toISOString() }
+      addSite: (name, details = {}) => {
+        const site = {
+          id: nanoid(),
+          name: name.trim(),
+          createdAt: new Date().toISOString(),
+          status: 'active',
+          ownerName: details.ownerName || '',
+          ownerPhone: details.ownerPhone || '',
+          address: details.address || '',
+        }
         set((state) => ({ sites: [...state.sites, site] }))
         return site.id
       },
@@ -37,12 +49,35 @@ const useStore = create(
         set((state) => ({
           sites: state.sites.filter((s) => s.id !== siteId),
           entries: state.entries.filter((e) => e.siteId !== siteId),
+          payments: state.payments.filter((p) => p.siteId !== siteId),
         }))
       },
 
       updateSiteName: (siteId, name) => {
         set((state) => ({
           sites: state.sites.map((s) => (s.id === siteId ? { ...s, name: name.trim() } : s)),
+        }))
+      },
+
+      updateSiteDetails: (siteId, details) => {
+        set((state) => ({
+          sites: state.sites.map((s) =>
+            s.id === siteId ? { ...s, ...details } : s
+          ),
+        }))
+      },
+
+      setSiteStatus: (siteId, status) => {
+        set((state) => ({
+          sites: state.sites.map((s) =>
+            s.id === siteId
+              ? {
+                  ...s,
+                  status,
+                  completedAt: status === 'completed' ? new Date().toISOString() : null,
+                }
+              : s
+          ),
         }))
       },
 
@@ -82,12 +117,47 @@ const useStore = create(
         }))
       },
 
+      // ─── PAYMENT ACTIONS ────────────────────────────────────
+      addPayment: ({ siteId, amount, method, date, note }) => {
+        const payment = {
+          id: nanoid(),
+          siteId,
+          amount: parseFloat(amount) || 0,
+          method: method || 'cash',   // 'bank' | 'cash' | 'upi'
+          date: date || new Date().toISOString().split('T')[0],
+          note: note?.trim() || '',
+          createdAt: new Date().toISOString(),
+        }
+        set((state) => ({ payments: [...state.payments, payment] }))
+        return payment.id
+      },
+
+      deletePayment: (paymentId) => {
+        set((state) => ({
+          payments: state.payments.filter((p) => p.id !== paymentId),
+        }))
+      },
+
       // ─── COMPUTED SELECTORS ─────────────────────────────────
       // Total spent on a site
       getSiteTotal: (siteId) => {
         return get()
           .entries.filter((e) => e.siteId === siteId)
           .reduce((sum, e) => sum + e.amount, 0)
+      },
+
+      // Total payments received for a site
+      getSitePaymentsTotal: (siteId) => {
+        return get()
+          .payments.filter((p) => p.siteId === siteId)
+          .reduce((sum, p) => sum + p.amount, 0)
+      },
+
+      // All payments for a site sorted by date desc
+      getSitePayments: (siteId) => {
+        return get()
+          .payments.filter((p) => p.siteId === siteId)
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
       },
 
       // Entries for a site, sorted by date desc
@@ -226,11 +296,11 @@ const useStore = create(
       },
 
       // ─── DATA MANAGEMENT ────────────────────────────────────
-      clearAllData: () => set({ sites: [], entries: [] }),
+      clearAllData: () => set({ sites: [], entries: [], payments: [] }),
 
       exportData: () => {
-        const { sites, entries } = get()
-        return JSON.stringify({ sites, entries, exportedAt: new Date().toISOString() }, null, 2)
+        const { sites, entries, payments } = get()
+        return JSON.stringify({ sites, entries, payments, exportedAt: new Date().toISOString() }, null, 2)
       },
     }),
     {

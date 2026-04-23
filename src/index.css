@@ -21,6 +21,8 @@
 
 html, body {
   height: 100%;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
   overscroll-behavior: none;
   font-family: 'Inter', sans-serif;
@@ -40,8 +42,16 @@ html, body {
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 80px rgba(0,0,0,0.15);
+  /* Remove box-shadow on mobile to fix white line at edges */
+  box-shadow: none;
   transition: background-color 0.3s ease;
+}
+
+/* Only add shadow on desktop where it looks good */
+@media (min-width: 431px) {
+  #root {
+    box-shadow: 0 0 80px rgba(0,0,0,0.15);
+  }
 }
 
 /* Scrollbar hidden */
@@ -126,6 +136,12 @@ html, body {
 /* ── Grand total card — always dark ────────────────────────────────────── */
 .grand-total-card {
   background-color: #2B1D1C !important;
+}
+
+/* ── Completed card — uses inline styles, needs dark mode override ─────── */
+.completed-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #bbf7d0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -213,13 +229,32 @@ html, body {
 /* ── Dark: Grand Total card stays dark ── */
 [data-theme="dark"] .grand-total-card { background-color: #0d1117 !important; }
 
-/* ── Dark: "Choose Site & Share" button — force text to stay white ── */
+/* ── Dark: Completed card — dark green tint ── */
+[data-theme="dark"] .completed-card {
+  background: linear-gradient(135deg, #0d2318 0%, #0f2b1a 100%) !important;
+  border-color: #166534 !important;
+}
+[data-theme="dark"] .completed-card .text-green-800 { color: #86EFAC !important; }
+[data-theme="dark"] .completed-card .bg-green-200 { background-color: #14532d !important; }
+[data-theme="dark"] .completed-card .text-red-500 { color: #f87171 !important; }
+
+/* ── Dark: Status badges ── */
+[data-theme="dark"] .bg-blue-100 { background-color: #1e3a5f !important; }
+[data-theme="dark"] .text-blue-700 { color: #93C5FD !important; }
+[data-theme="dark"] .bg-green-100 { background-color: #0d3320 !important; }
+[data-theme="dark"] .text-green-700 { color: #86EFAC !important; }
+[data-theme="dark"] .text-green-600 { color: #4ade80 !important; }
+[data-theme="dark"] .text-red-400 { color: #f87171 !important; }
+[data-theme="dark"] .text-green-400 { color: #4ade80 !important; }
+
+/* ── Dark: "Choose Site & Share" button ── */
 [data-theme="dark"] .share-btn { background-color: #FED447 !important; color: #2B1D1C !important; }
 [data-theme="dark"] .share-btn svg { stroke: #2B1D1C !important; }
 
-/* ── Dark: text-white on dark bg (entries count) should stay visible ── */
+/* ── Dark: text-white on dark bg ── */
 [data-theme="dark"] .text-white\/50 { color: rgba(255,255,255,0.5) !important; }
 [data-theme="dark"] .text-\[\#FED447\]\/70 { color: rgba(254,212,71,0.7) !important; }
+[data-theme="dark"] .text-\[\#FED447\]\/60 { color: rgba(254,212,71,0.6) !important; }
 
 /* ── Body bg transitions ── */
 body, #root, .screen { transition: background-color 0.25s ease; }
